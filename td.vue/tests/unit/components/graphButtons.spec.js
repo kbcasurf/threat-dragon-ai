@@ -6,6 +6,7 @@ import TdDropdown from '@/components/Dropdown.vue';
 import TdFormButton from '@/components/FormButton.vue';
 import TdGraphButtons from '@/components/GraphButtons.vue';
 import aiReportApi from '@/service/api/aiReportApi.js';
+import { STRIDE_TO_KEY } from '@/service/threats/aiThreatMapping.js';
 
 describe('components/GraphButtons.vue', () => {
     let btn, graph, localVue, wrapper, mockUndo, mockRedo, mockCanUndo, mockCanRedo;
@@ -329,5 +330,57 @@ describe('GraphButtons AI report', () => {
         const wrapper = mountWithAiConfig(true);
         await wrapper.vm.generateReport();
         expect(wrapper.vm.aiError).toBe(true);
+    });
+});
+
+const makeGraph = () => makeAiGraph();
+
+describe('GraphButtons importAiThreat', () => {
+    const suggestion = { elementId: 'c1', elementName: 'App', stride: 'Spoofing', severity: 'High', title: 'No auth', description: 'anon', mitigation: 'add auth' };
+
+    const mountWithCell = (cell) => {
+        const graph = makeGraph();
+        graph.getCellById = jest.fn(() => cell);
+        const dispatch = jest.fn();
+        const wrapper = shallowMount(TdGraphButtons, {
+            propsData: { graph },
+            mocks: {
+                $t: (k) => k,
+                $store: {
+                    dispatch,
+                    state: { threatmodel: { selectedDiagram: { id: 'd1', title: 'D', diagramType: 'STRIDE', detail: { threatTop: 2 } }, data: { detail: { threatTop: 2 } } }, config: { config: { aiReportEnabled: true } } }
+                }
+            },
+            stubs: ['b-btn-group', 'td-dropdown', 'td-form-button', 'td-ai-threat-report']
+        });
+        return { wrapper, dispatch, graph };
+    };
+
+    it('maps STRIDE Spoofing to its translation key', () => {
+        expect(STRIDE_TO_KEY.Spoofing).toBe('threats.model.stride.spoofing');
+    });
+
+    it('pushes a threat built from the suggestion onto the matched cell', () => {
+        const cell = { data: { type: 'tm.Process', threats: [] }, getData: jest.fn(function () { return this.data; }) };
+        const { wrapper } = mountWithCell(cell);
+        wrapper.vm.importAiThreat(suggestion);
+        expect(cell.data.threats).toHaveLength(1);
+        expect(cell.data.threats[0].title).toBe('No auth');
+        expect(cell.data.threats[0].severity).toBe('High');
+    });
+
+    it('tags the imported threat with its AI origin (T6)', () => {
+        const cell = { data: { type: 'tm.Process', threats: [] }, getData: jest.fn(function () { return this.data; }) };
+        const { wrapper } = mountWithCell(cell);
+        wrapper.vm.importAiThreat(suggestion);
+        // A note is appended, so the stored description is longer than the raw suggestion text
+        // (assertion is agnostic to how `tc` resolves the note in the test env).
+        expect(cell.data.threats[0].description).not.toBe(suggestion.description);
+    });
+
+    it('does nothing when the cell is not found', () => {
+        const { wrapper, graph } = mountWithCell(null);
+        graph.getCellById = jest.fn(() => null);
+        expect(() => wrapper.vm.importAiThreat(suggestion)).not.toThrow();
     });
 });

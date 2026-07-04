@@ -95,6 +95,12 @@ import TdAiReportConsent from '@/components/AiReportConsent.vue';
 import TdAiThreatReport from '@/components/AiThreatReport.vue';
 import TdDropdown from '@/components/Dropdown.vue';
 import TdFormButton from '@/components/FormButton.vue';
+import { createNewTypedThreat } from '@/service/threats/index.js';
+import { STRIDE_TO_KEY } from '@/service/threats/aiThreatMapping.js';
+import { CELL_DATA_UPDATED } from '@/store/actions/cell.js';
+import dataChanged from '@/service/x6/graph/data-changed.js';
+import tmActions from '@/store/actions/threatmodel.js';
+import { tc } from '@/i18n/index.js';
 
 export default {
     name: 'TdGraphButtons',
@@ -256,7 +262,29 @@ export default {
                 this.aiLoading = false;
             }
         },
-        importAiThreat() { /* implemented in Task 10 */ }
+        importAiThreat(suggestion) {
+            const cell = suggestion.elementId ? this.graph.getCellById(suggestion.elementId) : null;
+            if (!cell || !cell.data) { return; }
+            if (!Array.isArray(cell.data.threats)) { cell.data.threats = []; }
+
+            const nextNumber = (this.$store.state.threatmodel.data.detail.threatTop || 0) + 1;
+            const threat = createNewTypedThreat(this.diagram.diagramType, cell.data.type, nextNumber);
+            const strideKey = STRIDE_TO_KEY[suggestion.stride];
+
+            threat.title = suggestion.title;
+            threat.type = strideKey ? tc(strideKey) : threat.type;
+            threat.severity = suggestion.severity;
+            threat.description = `${suggestion.description}\n\n${tc('aiReport.importedNote')}`;
+            threat.mitigation = suggestion.mitigation;
+
+            cell.data.threats.push(threat);
+            cell.data.hasOpenThreats = cell.data.threats.length > 0;
+
+            this.$store.dispatch(tmActions.update, { threatTop: nextNumber });
+            this.$store.dispatch(tmActions.modified);
+            this.$store.dispatch(CELL_DATA_UPDATED, cell.data);
+            dataChanged.updateStyleAttrs(cell);
+        }
     }
 };
 </script>
