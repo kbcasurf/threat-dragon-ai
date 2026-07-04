@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import express from 'express';
 import request from 'supertest';
 
-import parsers from '../../src/config/parsers.config.js';
+import parsers, { AI_ROUTE, skipsGlobalJson } from '../../src/config/parsers.config.js';
 
 describe('config/parsers.config.js request parser', () => {
     let app;
@@ -55,5 +55,29 @@ describe('config/parsers.config.js request parser', () => {
             .send(body)
             .expect(200)
             .end(done);
+    });
+
+    it('does not run the global json parser for the AI route, leaving req.body unset (T8)', (done) => {
+        app.post(AI_ROUTE, function(req, res) {
+            expect(req.body).to.equal(undefined);
+            res.status(200);
+            res.send('result');
+        });
+
+        request(app)
+            .post(AI_ROUTE)
+            .set('Content-Type', 'application/json')
+            .send(JSON.stringify({ image: 'x' }))
+            .expect(200)
+            .end(done);
+    });
+});
+
+describe('parsers.config skipsGlobalJson', () => {
+    it('skips the global json parser for the AI route', () => {
+        expect(skipsGlobalJson(AI_ROUTE)).to.equal(true);
+    });
+    it('does not skip other routes', () => {
+        expect(skipsGlobalJson('/api/threatmodel/repos')).to.equal(false);
     });
 });

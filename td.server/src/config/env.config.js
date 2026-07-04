@@ -1,3 +1,4 @@
+import AiProviderEnv from '../env/AiProvider.js';
 import BitbucketEnv from '../env/Bitbucket.js';
 import EncryptionEnv from '../env/Encryption.js';
 import env from '../env/Env.js';
@@ -15,6 +16,7 @@ const tryLoadDotEnv = () => {
     const securityTxt = new SecurityTxtEnv();
     const threatDragon = new ThreatDragonEnv();
     const google = new GoogleEnv();
+    const aiProvider = new AiProviderEnv();
     env.get().addProvider(github);
     env.get().addProvider(gitlab);
     env.get().addProvider(encryption);
@@ -22,6 +24,7 @@ const tryLoadDotEnv = () => {
     env.get().addProvider(threatDragon);
     env.get().addProvider(google);
     env.get().addProvider(securityTxt);
+    env.get().addProvider(aiProvider);
     env.get().hydrate();
 };
 

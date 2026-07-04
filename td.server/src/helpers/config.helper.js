@@ -127,12 +127,17 @@ const buildOAuthFlags = (config) => ({
     googleEnabled: !isNullish(config.GOOGLE_CLIENT_ID)
 });
 
+const buildAiFlags = (config) => ({
+    aiReportEnabled: typeof config.AI_PROVIDER_API_KEY === 'string' && config.AI_PROVIDER_API_KEY.length > 0
+});
+
 export const buildConfig = (config, { intl = Intl } = {}) => {
     const localeConfig = buildLocaleConfig(config, intl);
 
     return {
         value: Object.freeze({
             ...buildOAuthFlags(config),
+            ...buildAiFlags(config),
             localEnabled: true,
             allowedLocales: Object.freeze([...localeConfig.allowedLocales]),
             defaultLocale: localeConfig.defaultLocale

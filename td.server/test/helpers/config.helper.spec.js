@@ -273,6 +273,28 @@ describe('config.helper.js', () => {
         });
     });
 
+    describe('aiReportEnabled flag', () => {
+        it('is true when AI_PROVIDER_API_KEY is set', () => {
+            const result = buildConfig({ AI_PROVIDER_API_KEY: 'sk-abc' });
+            expect(result.value.aiReportEnabled).to.equal(true);
+        });
+
+        it('is false when AI_PROVIDER_API_KEY is missing', () => {
+            const result = buildConfig({});
+            expect(result.value.aiReportEnabled).to.equal(false);
+        });
+
+        it('is false when AI_PROVIDER_API_KEY is an empty string', () => {
+            const result = buildConfig({ AI_PROVIDER_API_KEY: '' });
+            expect(result.value.aiReportEnabled).to.equal(false);
+        });
+
+        it('never leaks the AI provider key into the client config', () => {
+            const result = buildConfig({ AI_PROVIDER_API_KEY: 'sk-abc' });
+            expect(JSON.stringify(result.value)).to.not.contain('sk-abc');
+        });
+    });
+
     describe('getConfig (integration-style)', () => {
 
         afterEach(() => {
@@ -288,6 +310,7 @@ describe('config.helper.js', () => {
                 }
             });
             expect(getConfig()).to.deep.equal({
+                aiReportEnabled: false,
                 bitbucketEnabled: true,
                 githubEnabled: false,
                 gitlabEnabled: false,

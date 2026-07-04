@@ -23,6 +23,21 @@ of the [threat modeling manifesto][manifesto].
 This program is free software: you can redistribute it and/or modify it
 under the terms of the [Apache 2.0 License][license].
 
+> ⚠️ **Security note — AI Threat Report (optional feature).** Threat Dragon can optionally send a
+> diagram (its rendered image **and** its structured model) to an external LLM provider to generate
+> an advisory threat report. A threat model is a map of an application's weaknesses and keeps much
+> of that value to an attacker **even when anonymized**. Only enable this if you understand and
+> accept that exposure:
+>
+> - **Prefer a local / self-hosted LLM** on your own network so diagram data never leaves your
+>   perimeter. For hosted providers, require a no-training data policy and a data-processing
+>   agreement, and check data residency (LGPD/GDPR).
+> - **Ensure valid end-to-end HTTPS/TLS** so the image and model are encrypted in transit. A
+>   missing or misconfigured certificate exposes this data to interception.
+> - **In corporate environments, make this a security-team decision.** An operator who enables the
+>   feature without understanding the exposure — or who misconfigures TLS — can leak sensitive
+>   software-architecture information to third parties.
+
 ## Try Threat Dragon
 
 Access the latest version of Threat Dragon on [the demo website][demo] and refer to the [documentation pages][docs].
