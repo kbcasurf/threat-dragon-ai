@@ -383,4 +383,38 @@ describe('GraphButtons importAiThreat', () => {
         graph.getCellById = jest.fn(() => null);
         expect(() => wrapper.vm.importAiThreat(suggestion)).not.toThrow();
     });
+
+    it('initializes a missing threats array', () => {
+        const cell = { data: { type: 'tm.Process' }, getData: jest.fn(function () { return this.data; }) };
+        const { wrapper } = mountWithCell(cell);
+        wrapper.vm.importAiThreat(suggestion);
+        expect(cell.data.threats).toHaveLength(1);
+    });
+
+    it('falls back to the generated type when the STRIDE value is unrecognized', () => {
+        const cell = { data: { type: 'tm.Process', threats: [] }, getData: jest.fn(function () { return this.data; }) };
+        const { wrapper } = mountWithCell(cell);
+        wrapper.vm.importAiThreat({ ...suggestion, stride: 'Bogus' });
+        expect(cell.data.threats).toHaveLength(1);
+    });
+
+    it('numbers the first threat as 1 when threatTop is absent', () => {
+        const graph = makeGraph();
+        const cell = { data: { type: 'tm.Process', threats: [] }, getData: jest.fn(function () { return this.data; }) };
+        graph.getCellById = jest.fn(() => cell);
+        const dispatch = jest.fn();
+        const wrapper = shallowMount(TdGraphButtons, {
+            propsData: { graph },
+            mocks: {
+                $t: (k) => k,
+                $store: {
+                    dispatch,
+                    state: { threatmodel: { selectedDiagram: { id: 'd1', title: 'D', diagramType: 'STRIDE', detail: {} }, data: { detail: {} } }, config: { config: { aiReportEnabled: true } } }
+                }
+            },
+            stubs: ['b-btn-group', 'td-dropdown', 'td-form-button', 'td-ai-threat-report']
+        });
+        wrapper.vm.importAiThreat(suggestion);
+        expect(dispatch).toHaveBeenCalledWith(expect.anything(), { threatTop: 1 });
+    });
 });
