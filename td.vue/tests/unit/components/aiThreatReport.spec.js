@@ -26,4 +26,24 @@ describe('AiThreatReport.vue', () => {
         const wrapper = shallowMount(AiThreatReport, { propsData: { threats: [], loading: true, error: false, visible: true }, mocks: { $t: t }, stubs });
         expect(wrapper.vm.rows).toEqual([]);
     });
+
+    it('exposes an empty rows array when in the error state', () => {
+        const wrapper = shallowMount(AiThreatReport, { propsData: { threats: [{ title: 'A' }], loading: false, error: true, visible: true }, mocks: { $t: t }, stubs });
+        expect(wrapper.vm.rows).toEqual([]);
+    });
+
+    it('renders the error message when error is true', () => {
+        const wrapper = shallowMount(AiThreatReport, { propsData: { threats: [], loading: false, error: true, visible: true }, mocks: { $t: t }, stubs });
+        expect(wrapper.find('.text-danger').exists()).toBe(true);
+    });
+
+    it('renders the no-threats message when there are no threats', () => {
+        const wrapper = shallowMount(AiThreatReport, { propsData: { threats: [], loading: false, error: false, visible: true }, mocks: { $t: t }, stubs });
+        expect(wrapper.text()).toContain('aiReport.noThreats');
+    });
+
+    it('falls back to the unmatched label when a threat has no elementName', () => {
+        const wrapper = shallowMount(AiThreatReport, { propsData: { threats: [{ title: 'A', stride: 'Spoofing', severity: 'Low', mitigation: 'm' }], loading: false, error: false, visible: true }, mocks: { $t: t }, stubs });
+        expect(wrapper.vm.rows[0].elementName).toBe('aiReport.unmatched');
+    });
 });

@@ -50,6 +50,13 @@ describe('controllers/aiReportController.js', () => {
         expect(res.status.firstCall.args[0]).to.equal(400);
     });
 
+    it('returns 400 when the diagram is null', async () => {
+        const res = mockRes();
+        const controller = createAiReportController({ envDep: enabledEnv, serviceDep: { analyzeDiagram: sinon.stub() } });
+        await controller.analyze({ body: { image: pngUri, diagram: null } }, res);
+        expect(res.status.firstCall.args[0]).to.equal(400);
+    });
+
     it('returns 413 when the image exceeds the size cap (T8)', async () => {
         const res = mockRes();
         const smallCapEnv = { get: () => ({ config: { AI_PROVIDER_API_KEY: 'sk-x', AI_PROVIDER_MAX_IMAGE_BYTES: 10 } }) };
