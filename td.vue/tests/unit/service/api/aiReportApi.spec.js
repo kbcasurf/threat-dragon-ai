@@ -19,4 +19,9 @@ describe('service/api/aiReportApi.js', () => {
         const result = await aiReportApi.analyzeAsync(payload);
         expect(result.threats[0].title).toBe('T');
     });
+
+    it('forwards the locale in the posted body', async () => {
+        await aiReportApi.analyzeAsync({ image: 'x', diagram: {}, locale: 'ja' });
+        expect(api.postAsync).toHaveBeenCalledWith('/api/ai/threats', { image: 'x', diagram: {}, locale: 'ja' });
+    });
 });
