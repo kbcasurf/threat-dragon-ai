@@ -485,6 +485,32 @@ const messages = {
             cardNumberRequired: 'You must select a card number before saving.'
         }
     },
+    aiReport: {
+        generateReport: 'Generate Report',
+        title: 'AI Threat Report',
+        analyzing: 'Analyzing diagram…',
+        noThreats: 'No threats were identified.',
+        error: 'The AI threat report could not be generated. Please try again.',
+        advisory: 'AI-generated — advisory only. Review and verify before relying on it; this does not replace human threat modeling.',
+        element: 'Element',
+        severity: 'Severity',
+        strideType: 'STRIDE',
+        description: 'Description',
+        mitigation: 'Mitigation',
+        import: 'Import',
+        imported: 'Imported',
+        importedNote: '[AI-generated suggestion — verify before relying on it]',
+        unmatched: 'No matching diagram element',
+        consent: {
+            title: 'Before sending to the AI provider',
+            intro: 'This will send your diagram — both the rendered image and the structured model — to an external LLM provider for analysis.',
+            identifiers: 'A threat model is a map of your application\'s weaknesses and keeps that value even when anonymized. Any identifying data in labels or notes (application, company or team-member names, hostnames, ticket references) is high value for architecture reconnaissance by an attacker. Remove such data before sending, especially from the diagram image, which is harder to sanitize than structured fields.',
+            https: 'Use end-to-end HTTPS so the image and JSON are encrypted in transit and cannot be intercepted between the application, the server, and the LLM provider.',
+            accept: 'I understand and accept these risks',
+            analyze: 'Analyze',
+            cancel: 'Cancel'
+        }
+    },
     report: {
         options: {
             showOutOfScope: 'Show out of scope elements',
