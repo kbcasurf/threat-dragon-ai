@@ -83,6 +83,14 @@ describe('controllers/aiReportController.js', () => {
         expect(res.json.firstCall.args[0].threats[0].title).to.equal('T');
     });
 
+    it('forwards the selected locale to the service', async () => {
+        const res = mockRes();
+        const serviceDep = { analyzeDiagram: sinon.stub().resolves({ threats: [] }) };
+        const controller = createAiReportController({ envDep: enabledEnv, serviceDep });
+        await controller.analyze({ body: { image: pngUri, diagram: {}, locale: 'pt-BR' } }, res);
+        expect(serviceDep.analyzeDiagram.firstCall.args[0].locale).to.equal('pt-BR');
+    });
+
     it('returns 502 when the service fails', async () => {
         const res = mockRes();
         const err = new Error('boom'); err.statusCode = 502;
