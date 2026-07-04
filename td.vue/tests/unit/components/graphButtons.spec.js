@@ -5,6 +5,7 @@ import Vuex from 'vuex';
 import TdDropdown from '@/components/Dropdown.vue';
 import TdFormButton from '@/components/FormButton.vue';
 import TdGraphButtons from '@/components/GraphButtons.vue';
+import aiReportApi from '@/service/api/aiReportApi.js';
 
 describe('components/GraphButtons.vue', () => {
     let btn, graph, localVue, wrapper, mockUndo, mockRedo, mockCanUndo, mockCanRedo;
@@ -262,5 +263,71 @@ describe('components/GraphButtons.vue', () => {
         it('has a dropdown item for SVG', () => {
             expect(btn.find('#export-graph-svg').exists()).toBe(true);
         });
+    });
+});
+
+const makeAiGraph = () => ({
+    toPNG: jest.fn((cb) => cb('data:image/png;base64,AAA')),
+    zoomTo: jest.fn(), zoom: jest.fn(() => 1),
+    getSelectedCells: jest.fn(() => []), cleanSelection: jest.fn(), select: jest.fn()
+});
+
+const mountWithAiConfig = (aiReportEnabled) => shallowMount(TdGraphButtons, {
+    propsData: { graph: makeAiGraph() },
+    mocks: {
+        $t: (k) => k,
+        $store: { state: { threatmodel: { selectedDiagram: { id: 'd1', title: 'D' } }, config: { config: { aiReportEnabled } } } }
+    },
+    stubs: ['b-btn-group', 'td-dropdown', 'td-form-button', 'td-ai-threat-report', 'td-ai-report-consent']
+});
+
+describe('GraphButtons AI report', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it('reports the feature disabled when config flag is false', () => {
+        expect(mountWithAiConfig(false).vm.aiReportEnabled).toBe(false);
+    });
+
+    it('reports the feature enabled when config flag is true', () => {
+        expect(mountWithAiConfig(true).vm.aiReportEnabled).toBe(true);
+    });
+
+    it('opens the consent modal (and sends nothing) when the button is clicked', () => {
+        const spy = jest.spyOn(aiReportApi, 'analyzeAsync');
+        const wrapper = mountWithAiConfig(true);
+        wrapper.vm.openConsent();
+        expect(wrapper.vm.aiConsentVisible).toBe(true);
+        expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('runs the analysis when consent is confirmed', async () => {
+        jest.spyOn(aiReportApi, 'analyzeAsync').mockResolvedValue({ threats: [] });
+        const wrapper = mountWithAiConfig(true);
+        wrapper.vm.openConsent();
+        await wrapper.vm.onConsentConfirm();
+        expect(wrapper.vm.aiConsentVisible).toBe(false);
+        expect(wrapper.vm.aiModalVisible).toBe(true);
+    });
+
+    it('calls the api with the captured png and current diagram', async () => {
+        const spy = jest.spyOn(aiReportApi, 'analyzeAsync').mockResolvedValue({ threats: [{ title: 'T' }] });
+        const wrapper = mountWithAiConfig(true);
+        await wrapper.vm.generateReport();
+        expect(spy).toHaveBeenCalledWith({ image: 'data:image/png;base64,AAA', diagram: { id: 'd1', title: 'D' } });
+    });
+
+    it('stores returned threats and opens the modal', async () => {
+        jest.spyOn(aiReportApi, 'analyzeAsync').mockResolvedValue({ threats: [{ title: 'T' }] });
+        const wrapper = mountWithAiConfig(true);
+        await wrapper.vm.generateReport();
+        expect(wrapper.vm.aiThreats).toHaveLength(1);
+        expect(wrapper.vm.aiModalVisible).toBe(true);
+    });
+
+    it('sets the error flag when the api rejects', async () => {
+        jest.spyOn(aiReportApi, 'analyzeAsync').mockRejectedValue(new Error('boom'));
+        const wrapper = mountWithAiConfig(true);
+        await wrapper.vm.generateReport();
+        expect(wrapper.vm.aiError).toBe(true);
     });
 });

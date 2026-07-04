@@ -43,6 +43,14 @@
             :title="$t('threatmodel.buttons.toggleGrid')"
             text="" />
 
+        <td-form-button
+            v-if="aiReportEnabled"
+            :onBtnClick="openConsent"
+            icon="robot"
+            :title="$t('aiReport.generateReport')"
+            :text="$t('aiReport.generateReport')"
+            id="ai-generate-report" />
+
         <td-dropdown right variant="secondary" :text="$t('forms.export')" id="export-graph-btn">
             <template #default="{ close }">
                 <button type="button" class="td-dropdown-item" @click="exportPNG(); close()" id="export-graph-png">
@@ -65,27 +73,52 @@
             icon="save"
             :text="$t('forms.save')" />
 
+        <td-ai-report-consent
+            :visible="aiConsentVisible"
+            @confirm="onConsentConfirm"
+            @cancel="aiConsentVisible = false" />
+
+        <td-ai-threat-report
+            :threats="aiThreats"
+            :loading="aiLoading"
+            :error="aiError"
+            :visible="aiModalVisible"
+            @hide="aiModalVisible = false"
+            @import="importAiThreat" />
+
     </b-btn-group>
 </template>
 
 <script>
-import { mapState } from 'vuex';
-
+import aiReportApi from '@/service/api/aiReportApi.js';
+import TdAiReportConsent from '@/components/AiReportConsent.vue';
+import TdAiThreatReport from '@/components/AiThreatReport.vue';
 import TdDropdown from '@/components/Dropdown.vue';
 import TdFormButton from '@/components/FormButton.vue';
 
 export default {
     name: 'TdGraphButtons',
     components: {
+        TdAiReportConsent,
+        TdAiThreatReport,
         TdDropdown,
         TdFormButton
     },
-    computed: mapState({
-        diagram: (state) => state.threatmodel.selectedDiagram,
-    }),
+    computed: {
+        diagram() { return this.$store.state.threatmodel.selectedDiagram; },
+        aiReportEnabled() {
+            const config = this.$store.state.config?.config;
+            return !!(config && config.aiReportEnabled);
+        }
+    },
     data() {
         return {
-            gridShowing: true
+            gridShowing: true,
+            aiThreats: [],
+            aiLoading: false,
+            aiError: false,
+            aiModalVisible: false,
+            aiConsentVisible: false
         };
     },
     props: {
@@ -166,26 +199,59 @@ export default {
             });
         },
         async withSelectionCleared(fn) {
-            
+
             const selectedCells = this.graph.getSelectedCells();
-            
-            
+
+
             try {
                 this.graph.cleanSelection();
 
                 //Rendering is not immediate. Without this pause the export may include
                 //the previous selection highlight.
                 await new Promise(resolve => setTimeout(resolve, 100));
-                
-                fn();
+
+                return fn();
             } finally {
-                
-                
+
+
                 if (selectedCells.length > 0) {
                     this.graph.select(selectedCells);
                 }
             }
-        }
+        },
+        openConsent() {
+            this.aiConsentVisible = true;
+        },
+        async onConsentConfirm() {
+            this.aiConsentVisible = false;
+            await this.generateReport();
+        },
+        capturePng() {
+            return new Promise((resolve) => {
+                const currentZoom = this.graph.zoom();
+                this.graph.zoomTo(1);
+                this.graph.toPNG((dataUri) => {
+                    this.graph.zoomTo(currentZoom);
+                    resolve(dataUri);
+                }, { padding: 50 });
+            });
+        },
+        async generateReport() {
+            this.aiError = false;
+            this.aiThreats = [];
+            this.aiLoading = true;
+            this.aiModalVisible = true;
+            try {
+                const image = await this.withSelectionCleared(() => this.capturePng());
+                const result = await aiReportApi.analyzeAsync({ image, diagram: this.diagram });
+                this.aiThreats = result.threats || [];
+            } catch {
+                this.aiError = true;
+            } finally {
+                this.aiLoading = false;
+            }
+        },
+        importAiThreat() { /* implemented in Task 10 */ }
     }
 };
 </script>
