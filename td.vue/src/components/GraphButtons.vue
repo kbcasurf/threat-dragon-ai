@@ -229,11 +229,16 @@ export default {
         capturePng() {
             return new Promise((resolve) => {
                 const currentZoom = this.graph.zoom();
-                this.graph.zoomTo(1);
-                this.graph.toPNG((dataUri) => {
+                try {
+                    this.graph.zoomTo(1);
+                    this.graph.toPNG((dataUri) => {
+                        this.graph.zoomTo(currentZoom);
+                        resolve(dataUri);
+                    }, { padding: 50 });
+                } catch (e) {
                     this.graph.zoomTo(currentZoom);
-                    resolve(dataUri);
-                }, { padding: 50 });
+                    throw e;
+                }
             });
         },
         async generateReport() {
