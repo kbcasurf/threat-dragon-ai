@@ -45,6 +45,16 @@ describe('services/aiProviderService.js', () => {
             const dirty = JSON.stringify({ threats: [{ title: 'a\tb', stride: 'Tampering', severity: 'Low', description: 'd', mitigation: 'm' }] });
             expect(service.parseThreatsFromContent(dirty)[0].title).to.equal('a b');
         });
+
+        it('defaults an out-of-list stride to Tampering', () => {
+            const bogus = JSON.stringify({ threats: [{ title: 't', stride: 'Bogus', severity: 'Low', description: 'd', mitigation: 'm' }] });
+            expect(service.parseThreatsFromContent(bogus)[0].stride).to.equal('Tampering');
+        });
+
+        it('defaults an out-of-list severity to Medium', () => {
+            const bogus = JSON.stringify({ threats: [{ title: 't', stride: 'Tampering', severity: 'Critical', description: 'd', mitigation: 'm' }] });
+            expect(service.parseThreatsFromContent(bogus)[0].severity).to.equal('Medium');
+        });
     });
 
     describe('analyzeDiagram', () => {
@@ -94,6 +104,13 @@ describe('services/aiProviderService.js', () => {
             expect(headers['x-api-key']).to.equal('sk-test');
         });
 
+        it('anthropic: sets the anthropic-version header', async () => {
+            const axiosDep = { post: sinon.stub().resolves({ data: { content: [{ type: 'text', text: validContent }] } }) };
+            await service.analyzeDiagram({ image: 'data:image/png;base64,AAA', diagram: {} }, { axiosDep, envDep: makeEnv({ AI_PROVIDER_API_FORMAT: 'anthropic' }) });
+            const headers = axiosDep.post.firstCall.args[2].headers;
+            expect(headers['anthropic-version']).to.equal('2023-06-01');
+        });
+
         it('anthropic: sends base64 image data without the data-URI prefix', async () => {
             const axiosDep = { post: sinon.stub().resolves({ data: { content: [{ type: 'text', text: validContent }] } }) };
             await service.analyzeDiagram({ image: 'data:image/png;base64,AAA', diagram: {} }, { axiosDep, envDep: makeEnv({ AI_PROVIDER_API_FORMAT: 'anthropic' }) });
@@ -115,6 +132,17 @@ describe('services/aiProviderService.js', () => {
             }
         });
 
+        it('never calls axios post when the api url is not https (T11)', async () => {
+            const post = sinon.stub();
+            try {
+                await service.analyzeDiagram({ image: 'x', diagram: {} }, { axiosDep: { post }, envDep: makeEnv({ AI_PROVIDER_API_URL: 'http://insecure/x' }) });
+                expect.fail('should have thrown');
+            } catch {
+                // expected
+            }
+            expect(post.called).to.equal(false);
+        });
+
         it('openai: returns normalized threats from the model response', async () => {
             const result = await service.analyzeDiagram({ image: 'data:image/png;base64,AAA', diagram: { id: 'd1' } }, { axiosDep: okOpenAi(), envDep });
             expect(result.threats[0].elementName).to.equal('Web App');
@@ -128,6 +156,36 @@ describe('services/aiProviderService.js', () => {
             } catch (err) {
                 expect(err.statusCode).to.equal(502);
             }
+        });
+
+        it('rejects with statusCode 502 when the upstream 200 response content is not JSON', async () => {
+            const axiosDep = { post: sinon.stub().resolves({ data: { choices: [{ message: { content: 'not json at all' } }] } }) };
+            try {
+                await service.analyzeDiagram({ image: 'x', diagram: {} }, { axiosDep, envDep });
+                expect.fail('should have thrown');
+            } catch (err) {
+                expect(err.statusCode).to.equal(502);
+            }
+        });
+
+        it('resolves to an empty threats array when the response JSON has no threats', async () => {
+            const axiosDep = { post: sinon.stub().resolves({ data: { choices: [{ message: { content: '{"threats":[]}' } }] } }) };
+            const result = await service.analyzeDiagram({ image: 'x', diagram: {} }, { axiosDep, envDep });
+            expect(result).to.deep.equal({ threats: [] });
+        });
+
+        it('dispatches to the openai adapter when AI_PROVIDER_API_FORMAT is unrecognized', async () => {
+            const axiosDep = okOpenAi();
+            await service.analyzeDiagram({ image: 'x', diagram: {} }, { axiosDep, envDep: makeEnv({ AI_PROVIDER_API_FORMAT: 'bogus' }) });
+            const headers = axiosDep.post.firstCall.args[2].headers;
+            expect(headers.Authorization).to.equal('Bearer sk-test');
+        });
+
+        it('dispatches to the openai adapter when AI_PROVIDER_API_FORMAT is undefined', async () => {
+            const axiosDep = okOpenAi();
+            await service.analyzeDiagram({ image: 'x', diagram: {} }, { axiosDep, envDep: makeEnv({ AI_PROVIDER_API_FORMAT: undefined }) });
+            const headers = axiosDep.post.firstCall.args[2].headers;
+            expect(headers.Authorization).to.equal('Bearer sk-test');
         });
     });
 });

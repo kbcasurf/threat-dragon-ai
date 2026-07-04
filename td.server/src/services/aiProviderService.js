@@ -56,11 +56,11 @@ const normalizeThreat = (raw) => {
     };
 };
 
-export const parseThreatsFromContent = (content) => {
-    const parsed = extractJson(content);
-    if (!parsed || !Array.isArray(parsed.threats)) { return []; }
-    return parsed.threats.map(normalizeThreat).filter((t) => t !== null);
-};
+const normalizeThreats = (parsed) => ((parsed && Array.isArray(parsed.threats))
+    ? parsed.threats.map(normalizeThreat).filter((t) => t !== null)
+    : []);
+
+export const parseThreatsFromContent = (content) => normalizeThreats(extractJson(content));
 
 const parseJsonObject = (raw) => {
     if (typeof raw !== 'string' || raw.length === 0) { return {}; }
@@ -152,7 +152,14 @@ export const analyzeDiagram = async ({ image, diagram }, deps = {}) => {
         throw err;
     }
 
-    return { threats: parseThreatsFromContent(adapter.extract(response && response.data)) };
+    const parsed = extractJson(adapter.extract(response && response.data));
+    if (parsed === null) {
+        const err = new Error('AI provider returned an unparseable response');
+        err.statusCode = 502;
+        throw err;
+    }
+
+    return { threats: normalizeThreats(parsed) };
 };
 
 export default { analyzeDiagram, parseThreatsFromContent };
