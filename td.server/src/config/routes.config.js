@@ -1,5 +1,6 @@
 import express from 'express';
 
+import aiReportController from '../controllers/aiReportController.js';
 import auth from '../controllers/auth.js';
 import bearer from './bearer.config.js';
 import configController from '../controllers/configcontroller';
@@ -43,6 +44,8 @@ const unauthRoutes = (router) => {
 const routes = (router) => {
     router.post('/api/logout', auth.logout);
     router.post('/api/token/refresh', auth.refresh);
+    // AI-assisted threat report (bounded JSON parser above the per-image size cap in the controller)
+    router.post('/api/ai/threats', express.json({ limit: '10mb' }), aiReportController.analyze);
     // Template routes
     router.post('/api/templates/bootstrap', templateController.bootstrapTemplateRepository);// bootstrap template repo
     router.get('/api/templates/', templateController.listTemplates);// list all templates
