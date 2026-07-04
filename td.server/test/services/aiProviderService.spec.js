@@ -70,6 +70,36 @@ describe('services/aiProviderService.js', () => {
         });
     });
 
+    describe('resolveLanguage', () => {
+        it('maps a supported region locale to its language name', () => {
+            expect(service.resolveLanguage('pt-BR')).to.equal('Brazilian Portuguese');
+        });
+
+        it('maps a supported base locale to its language name', () => {
+            expect(service.resolveLanguage('ja')).to.equal('Japanese');
+        });
+
+        it('falls back to English for an unknown locale', () => {
+            expect(service.resolveLanguage('xx')).to.equal('English');
+        });
+
+        it('falls back to English when the locale is absent', () => {
+            expect(service.resolveLanguage(undefined)).to.equal('English');
+        });
+
+        it('falls back to English for a non-string locale', () => {
+            expect(service.resolveLanguage(42)).to.equal('English');
+        });
+
+        it('falls back to English for an empty string', () => {
+            expect(service.resolveLanguage('')).to.equal('English');
+        });
+
+        it('falls back to English for an inherited object key', () => {
+            expect(service.resolveLanguage('constructor')).to.equal('English');
+        });
+    });
+
     describe('analyzeDiagram', () => {
         const makeEnv = (overrides = {}) => ({ get: () => ({ config: {
             AI_PROVIDER_API_URL: 'https://prov.test/x',
@@ -258,6 +288,24 @@ describe('services/aiProviderService.js', () => {
             } catch (err) {
                 expect(err.statusCode).to.be.oneOf([500, 502]);
             }
+        });
+
+        it('openai: names the selected language in the system prompt', async () => {
+            const axiosDep = okOpenAi();
+            await service.analyzeDiagram({ image: 'x', diagram: {}, locale: 'ja' }, { axiosDep, envDep });
+            expect(axiosDep.post.firstCall.args[1].messages[0].content).to.contain('Japanese');
+        });
+
+        it('anthropic: names the selected language in the system field', async () => {
+            const axiosDep = { post: sinon.stub().resolves({ data: { content: [{ type: 'text', text: validContent }] } }) };
+            await service.analyzeDiagram({ image: 'x', diagram: {}, locale: 'pt-BR' }, { axiosDep, envDep: makeEnv({ AI_PROVIDER_API_FORMAT: 'anthropic' }) });
+            expect(axiosDep.post.firstCall.args[1].system).to.contain('Brazilian Portuguese');
+        });
+
+        it('openai: defaults the prompt language to English when no locale is given', async () => {
+            const axiosDep = okOpenAi();
+            await service.analyzeDiagram({ image: 'x', diagram: {} }, { axiosDep, envDep });
+            expect(axiosDep.post.firstCall.args[1].messages[0].content).to.contain('English');
         });
     });
 });
