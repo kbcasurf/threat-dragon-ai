@@ -19,7 +19,7 @@ export const createAiReportController = (deps = {}) => {
             return res.status(403).json({ error: 'AI threat report is not enabled' });
         }
 
-        const { image, diagram } = req.body || {};
+        const { image, diagram, locale } = req.body || {};
         const validImage = typeof image === 'string' && image.startsWith(PNG_DATA_URI_PREFIX);
         const validDiagram = diagram !== null && diagram !== undefined && typeof diagram === 'object';
         if (!validImage || !validDiagram) {
@@ -32,7 +32,7 @@ export const createAiReportController = (deps = {}) => {
         }
 
         try {
-            const result = await serviceDep.analyzeDiagram({ image, diagram });
+            const result = await serviceDep.analyzeDiagram({ image, diagram, locale });
             return res.status(200).json(result);
         } catch (err) {
             const statusCode = err && err.statusCode ? err.statusCode : 502;
