@@ -93,6 +93,8 @@
 !td.server/src/constants/
 !td.server/src/constants/*.js
 !td.server/src/repositories/*.js
+!td.server/src/services/
+!td.server/src/services/*.js
 !td.server/test/
 !td.server/test/.eslintrc.js
 !td.server/test/*.spec.js
@@ -114,6 +116,8 @@
 !td.server/test/public/*.ico
 !td.server/test/repositories/
 !td.server/test/repositories/*.spec.js
+!td.server/test/services/
+!td.server/test/services/*.spec.js
 !td.server/.babelrc
 !td.server/.npmrc
 !td.server/.eslintrc.js
