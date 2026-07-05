@@ -254,7 +254,8 @@ export default {
             this.aiModalVisible = true;
             try {
                 const image = await this.withSelectionCleared(() => this.capturePng());
-                const result = await aiReportApi.analyzeAsync({ image, diagram: this.diagram });
+                const locale = this.$store.state.locale?.locale;
+                const result = await aiReportApi.analyzeAsync({ image, diagram: this.diagram, locale });
                 this.aiThreats = result.threats || [];
             } catch {
                 this.aiError = true;
