@@ -418,3 +418,52 @@ describe('GraphButtons importAiThreat', () => {
         expect(dispatch).toHaveBeenCalledWith(expect.anything(), { threatTop: 1 });
     });
 });
+
+describe('GraphButtons AI report language', () => {
+    const makeGraphForLang = () => ({
+        toPNG: jest.fn((cb) => cb('data:image/png;base64,AAA')),
+        zoomTo: jest.fn(), zoom: jest.fn(() => 1),
+        getSelectedCells: jest.fn(() => []), cleanSelection: jest.fn(), select: jest.fn()
+    });
+
+    const mountWithLocale = (locale) => shallowMount(TdGraphButtons, {
+        propsData: { graph: makeGraphForLang() },
+        mocks: {
+            $t: (k) => k,
+            $store: { state: {
+                threatmodel: { selectedDiagram: { id: 'd1', title: 'D' } },
+                config: { config: { aiReportEnabled: true } },
+                locale: { locale }
+            } }
+        },
+        stubs: ['b-btn-group', 'td-dropdown', 'td-form-button', 'td-ai-threat-report', 'td-ai-report-consent']
+    });
+
+    const mountWithoutLocaleModule = () => shallowMount(TdGraphButtons, {
+        propsData: { graph: makeGraphForLang() },
+        mocks: {
+            $t: (k) => k,
+            $store: { state: {
+                threatmodel: { selectedDiagram: { id: 'd1', title: 'D' } },
+                config: { config: { aiReportEnabled: true } }
+            } }
+        },
+        stubs: ['b-btn-group', 'td-dropdown', 'td-form-button', 'td-ai-threat-report', 'td-ai-report-consent']
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('sends the selected UI locale to the api', async () => {
+        const spy = jest.spyOn(aiReportApi, 'analyzeAsync').mockResolvedValue({ threats: [] });
+        const wrapper = mountWithLocale('pt-BR');
+        await wrapper.vm.generateReport();
+        expect(spy).toHaveBeenCalledWith({ image: 'data:image/png;base64,AAA', diagram: { id: 'd1', title: 'D' }, locale: 'pt-BR' });
+    });
+
+    it('forwards an undefined locale when the locale store module is absent', async () => {
+        const spy = jest.spyOn(aiReportApi, 'analyzeAsync').mockResolvedValue({ threats: [] });
+        const wrapper = mountWithoutLocaleModule();
+        await wrapper.vm.generateReport();
+        expect(spy.mock.calls[0][0].locale).toBeUndefined();
+    });
+});

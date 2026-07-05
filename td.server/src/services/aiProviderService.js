@@ -8,6 +8,31 @@ const MAX_TITLE = 200;
 const MAX_TEXT = 2000;
 const ANTHROPIC_VERSION = '2023-06-01';
 
+const LANGUAGE_NAMES = {
+    ar: 'Arabic',
+    de: 'German',
+    el: 'Greek',
+    en: 'English',
+    es: 'Spanish',
+    fi: 'Finnish',
+    fr: 'French',
+    hi: 'Hindi',
+    id: 'Indonesian',
+    ja: 'Japanese',
+    ms: 'Malay',
+    pt: 'Portuguese',
+    'pt-BR': 'Brazilian Portuguese',
+    zh: 'Chinese'
+};
+
+export const resolveLanguage = (locale) => ((typeof locale === 'string' && Object.prototype.hasOwnProperty.call(LANGUAGE_NAMES, locale))
+    ? LANGUAGE_NAMES[locale]
+    : 'English');
+
+const languageDirective = (languageName) => ` Write the "title", "description" and "mitigation" fields in ${languageName}.` +
+    ' Keep "elementId", "stride" and "severity" exactly as specified (English enum values)' +
+    ' and echo "elementName" verbatim from the model.';
+
 const SYSTEM_PROMPT = [
     'You are a threat-modeling assistant. Analyze the provided data flow diagram using the STRIDE methodology.',
     'You are given a PNG image of the diagram and its structured JSON model between <diagram> tags.',
@@ -76,12 +101,12 @@ const diagramText = (diagram) => `<diagram>${JSON.stringify(diagram)}</diagram>`
 const stripDataUri = (image) => (typeof image === 'string' ? image.replace(/^data:image\/png;base64,/u, '') : '');
 
 // --- Adapter: OpenAI-compatible chat/completions ---
-const buildOpenAiRequest = ({ image, diagram, config }) => ({
+const buildOpenAiRequest = ({ image, diagram, config, systemPrompt }) => ({
     body: {
         model: config.AI_PROVIDER_MODEL,
         max_tokens: Number(config.AI_PROVIDER_MAX_TOKENS),
         messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: [
                 { type: 'image_url', image_url: { url: image } },
                 { type: 'text', text: diagramText(diagram) }
@@ -97,11 +122,11 @@ const extractOpenAiContent = (data) => (data && Array.isArray(data.choices) && d
     : null);
 
 // --- Adapter: native Anthropic Messages API ---
-const buildAnthropicRequest = ({ image, diagram, config }) => ({
+const buildAnthropicRequest = ({ image, diagram, config, systemPrompt }) => ({
     body: {
         model: config.AI_PROVIDER_MODEL,
         max_tokens: Number(config.AI_PROVIDER_MAX_TOKENS),
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: [
             { role: 'user', content: [
                 { type: 'image', source: { type: 'base64', media_type: 'image/png', data: stripDataUri(image) } },
@@ -126,7 +151,7 @@ const ADAPTERS = {
     anthropic: { build: buildAnthropicRequest, extract: extractAnthropicContent }
 };
 
-export const analyzeDiagram = async ({ image, diagram }, deps = {}) => {
+export const analyzeDiagram = async ({ image, diagram, locale }, deps = {}) => {
     const axiosDep = deps.axiosDep || axios;
     const envDep = deps.envDep || env;
     const config = envDep.get().config;
@@ -139,7 +164,8 @@ export const analyzeDiagram = async ({ image, diagram }, deps = {}) => {
     }
 
     const adapter = ADAPTERS[config.AI_PROVIDER_API_FORMAT] || ADAPTERS.openai;
-    const { body, headers } = adapter.build({ image, diagram, config });
+    const systemPrompt = SYSTEM_PROMPT + languageDirective(resolveLanguage(locale));
+    const { body, headers } = adapter.build({ image, diagram, config, systemPrompt });
     // T3: no HTTP-Referer / X-Title identifying headers are added.
     const options = { headers, timeout: Number(config.AI_PROVIDER_TIMEOUT_MS) };
 
