@@ -331,6 +331,28 @@ describe('GraphButtons AI report', () => {
         await wrapper.vm.generateReport();
         expect(wrapper.vm.aiError).toBe(true);
     });
+
+    it('re-selects cells only after the async png capture has resolved', async () => {
+        const order = [];
+        const graph = {
+            toPNG: jest.fn((cb) => setTimeout(() => { order.push('capture'); cb('data:image/png;base64,AAA'); }, 0)),
+            zoomTo: jest.fn(), zoom: jest.fn(() => 1),
+            getSelectedCells: jest.fn(() => [{ id: 'c1' }]),
+            cleanSelection: jest.fn(),
+            select: jest.fn(() => order.push('reselect'))
+        };
+        jest.spyOn(aiReportApi, 'analyzeAsync').mockResolvedValue({ threats: [] });
+        const wrapper = shallowMount(TdGraphButtons, {
+            propsData: { graph },
+            mocks: {
+                $t: (k) => k,
+                $store: { state: { threatmodel: { selectedDiagram: { id: 'd1', title: 'D' } }, config: { config: { aiReportEnabled: true } } } }
+            },
+            stubs: ['b-btn-group', 'td-dropdown', 'td-form-button', 'td-ai-threat-report', 'td-ai-report-consent']
+        });
+        await wrapper.vm.generateReport();
+        expect(order).toEqual(['capture', 'reselect']);
+    });
 });
 
 const makeGraph = () => makeAiGraph();
