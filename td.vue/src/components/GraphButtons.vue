@@ -216,7 +216,10 @@ export default {
                 //the previous selection highlight.
                 await new Promise(resolve => setTimeout(resolve, 100));
 
-                return fn();
+                // Await so the finally block re-selects the cells only after an async
+                // fn (e.g. capturePng) has finished; otherwise the restored selection
+                // highlight can leak into the captured image.
+                return await fn();
             } finally {
 
 
