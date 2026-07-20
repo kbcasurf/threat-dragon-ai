@@ -97,7 +97,11 @@ const parseJsonObject = (raw) => {
     }
 };
 
-const diagramText = (diagram) => `<diagram>${JSON.stringify(diagram)}</diagram>`;
+// Escape angle brackets so untrusted diagram content (labels, notes) cannot forge a
+// closing </diagram> tag and break out of the untrusted-data boundary the SYSTEM_PROMPT
+// relies on. Same principle as escaping </script> when embedding JSON in HTML.
+const escapeDiagramDelimiter = (json) => json.replace(/</gu, '\\u003c').replace(/>/gu, '\\u003e');
+const diagramText = (diagram) => `<diagram>${escapeDiagramDelimiter(JSON.stringify(diagram))}</diagram>`;
 const stripDataUri = (image) => (typeof image === 'string' ? image.replace(/^data:image\/png;base64,/u, '') : '');
 
 // --- Adapter: OpenAI-compatible chat/completions ---
