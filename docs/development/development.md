@@ -113,6 +113,11 @@ is already required to be HTTPS at the code level regardless of this setup.
     1. extract the CA root certificate: `docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./caddy-local-ca.crt`
     2. import it into your OS trust store:
         * Linux (Debian/Ubuntu): `sudo cp caddy-local-ca.crt /usr/local/share/ca-certificates/caddy-local-ca.crt && sudo update-ca-certificates`
+          — this updates the OpenSSL system trust store (used by `curl`, `wget`, Node.js,
+          etc.), but **Chrome and other Chromium-based browsers on Linux use a separate
+          per-user NSS database and ignore this store.** To also trust the CA in Chrome:
+          `sudo apt-get install -y libnss3-tools && certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "caddy-local-ca" -i caddy-local-ca.crt`,
+          then restart the browser.
         * macOS: `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain caddy-local-ca.crt`
         * Windows (PowerShell as Administrator): `certutil -addstore -f "ROOT" caddy-local-ca.crt`
 * navigate to [https://localhost](https://localhost/) — no browser warning after the CA import above
