@@ -117,7 +117,10 @@ is already required to be HTTPS at the code level regardless of this setup.
           etc.), but **Chrome and other Chromium-based browsers on Linux use a separate
           per-user NSS database and ignore this store.** To also trust the CA in Chrome:
           `sudo apt-get install -y libnss3-tools && certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "caddy-local-ca" -i caddy-local-ca.crt`,
-          then restart the browser.
+          then restart the browser. Firefox does not use this NSS database either — it
+          keeps its own per-profile certificate store, so import the same
+          `caddy-local-ca.crt` via Settings → Privacy & Security → Certificates →
+          View Certificates → Authorities → Import.
         * macOS: `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain caddy-local-ca.crt`
         * Windows (PowerShell as Administrator): `certutil -addstore -f "ROOT" caddy-local-ca.crt`
 * navigate to [https://localhost](https://localhost/) — no browser warning after the CA import above
@@ -129,6 +132,11 @@ Caveats:
 * ports 80 and 443 must be free on your host; stop anything else bound to them first.
 * until you complete the CA trust step, browsers will show a "not secure" warning —
   expected the first time only.
+* leave `SERVER_API_PROTOCOL=http` in `.env` (the `example.env` default) — TLS is
+  terminated by Caddy, not by the Node app, which always listens over plain HTTP
+  internally. Setting it to `https` doesn't add TLS to the app; it only breaks the
+  container's own healthcheck, which would then probe `https://localhost:3000/healthz`
+  against a plain-HTTP listener.
 
 ## Desktop
 
