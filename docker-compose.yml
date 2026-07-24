@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: threat-dragon:local
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

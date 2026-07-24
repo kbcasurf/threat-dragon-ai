@@ -31,6 +31,8 @@
 # docker files
 !.dockerignore
 !Dockerfile
+!docker-stack.prod.yml
+!docker-compose.yml
 
 # allow build system and artwork
 !cupcake/icons/*.ico
@@ -344,3 +346,6 @@
 !ThreatDragonModels/*model.json
 !ThreatDragonModels/test/
 !ThreatDragonModels/test/*.json
+
+# local-only planning docs — never pushed
+docs/superpowers/
