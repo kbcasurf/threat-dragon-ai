@@ -100,6 +100,31 @@ A Dockerfile is provided that can be used to create a docker image:
 * navigate in a browser to `http://localhost:8080/`
 * if there is an error in the browser such as 'Cannot GET /' then make sure the `.env` file is correct
 
+### Docker Compose with local TLS (Caddy)
+
+`docker-compose.yml` runs the app behind a [Caddy](https://caddyserver.com/) reverse
+proxy that terminates TLS locally, so the browser↔app leg is HTTPS instead of plain
+HTTP. This is separate from (and unrelated to) the app→LLM-provider connection, which
+is already required to be HTTPS at the code level regardless of this setup.
+
+* create a `.env` file from `example.env` as described above
+* start the stack: `docker compose up -d`
+* the first time only, trust Caddy's local CA on your machine:
+    1. extract the CA root certificate: `docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./caddy-local-ca.crt`
+    2. import it into your OS trust store:
+        * Linux (Debian/Ubuntu): `sudo cp caddy-local-ca.crt /usr/local/share/ca-certificates/caddy-local-ca.crt && sudo update-ca-certificates`
+        * macOS: `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain caddy-local-ca.crt`
+        * Windows (PowerShell as Administrator): `certutil -addstore -f "ROOT" caddy-local-ca.crt`
+* navigate to [https://localhost](https://localhost/) — no browser warning after the CA import above
+
+Caveats:
+
+* `docker compose down -v` deletes the `caddy_data` volume, which regenerates the CA
+  on the next `up` — you'll need to repeat the trust step above.
+* ports 80 and 443 must be free on your host; stop anything else bound to them first.
+* until you complete the CA trust step, browsers will show a "not secure" warning —
+  expected the first time only.
+
 ## Desktop
 
 Threat Dragon uses electron to build install images for the desktop application, supporting Linux, MacOS and Windows.
