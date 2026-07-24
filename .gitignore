@@ -33,6 +33,7 @@
 !Dockerfile
 !docker-stack.prod.yml
 !docker-compose.yml
+!Caddyfile
 
 # allow build system and artwork
 !cupcake/icons/*.ico
