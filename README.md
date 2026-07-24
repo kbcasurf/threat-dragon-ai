@@ -153,6 +153,24 @@ first configure your [environment using dotenv][config] and run from the top dir
 
 Using http port 8080 and accessing Threat Dragon on `http://localhost:8080/`.
 
+### Running behind a reverse proxy
+
+`td.server/src/app.js` sets `app.set('trust proxy', true)`, which tells Express to
+trust the entire `X-Forwarded-*` header chain unconditionally. If you deploy Threat
+Dragon behind your own reverse proxy (nginx, Traefik, Caddy, an ALB/load balancer,
+etc.), this setting means the app trusts `X-Forwarded-For` from anyone — including a
+client that sets the header itself — which lets a malicious client spoof its
+apparent IP and bypass the app's IP-based rate limiting. `express-rate-limit`
+itself flags this configuration as unsafe (`ERR_ERL_PERMISSIVE_TRUST_PROXY`).
+
+Before deploying behind a reverse proxy, a system administrator should change this
+line to match the actual network topology — for example `app.set('trust proxy', 1)`
+to trust exactly one hop (the proxy directly in front of the app), or a specific
+IP/CIDR value identifying the proxy, rather than the permissive `true`. See the
+[Express `trust proxy` documentation][trust-proxy] and the
+[`express-rate-limit` guidance on this error][erl-trust-proxy] for how to pick the
+right value for your setup.
+
 ### Contributing
 
 [![GitHub contributors](https://img.shields.io/github/contributors/owasp/threat-dragon.svg)][contributors]
@@ -194,6 +212,7 @@ Threat Dragon: _making threat modeling less threatening_
 [demo]: https://www.threatdragon.com/#/
 [docs]: https://www.threatdragon.com/docs/
 [config]: https://www.threatdragon.com/docs/configure/configure.html
+[erl-trust-proxy]: https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/
 [github]: https://www.threatdragon.com/docs/configure/github.html
 [gitlab]: https://www.threatdragon.com/docs/configure/gitlab.html
 [latest]: https://github.com/owasp/threat-dragon/releases/latest/
@@ -207,3 +226,4 @@ Threat Dragon: _making threat modeling less threatening_
 [releases]: https://github.com/OWASP/threat-dragon/releases
 [subscribe]: https://owasp.org/slack/invite
 [td-slack]: https://owasp.slack.com/messages/CURE8PQ68
+[trust-proxy]: https://expressjs.com/en/guide/behind-proxies.html
