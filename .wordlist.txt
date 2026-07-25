@@ -20,6 +20,7 @@ BOM
 Brasil
 BrowserStack
 bundler
+Caddy
 CentOS
 chai
 chruby
@@ -73,6 +74,7 @@ gitlab
 GitLab
 gridlines
 handoff
+healthcheck
 hin
 hostname
 https
@@ -98,6 +100,7 @@ linux
 localhost
 LTS
 MacOS
+macOS
 md
 misconfigurations
 mitigations
@@ -125,6 +128,7 @@ pnpm
 por
 português
 postfix
+PowerShell
 pre
 PRs
 PWD
