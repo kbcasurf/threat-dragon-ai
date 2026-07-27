@@ -45,25 +45,30 @@
     "test:unit": "vue-cli-service test:unit --testPathIgnorePatterns tests/unit/desktop/",
     "test:vue": "vue-cli-service test:e2e -C e2e.local.config.js --headless --browser chrome"
   },
-  "description": "OWASP Threat Dragon - a free, open source threat modeling tool",
+  "description": "Fork of OWASP Threat Dragon adding an AI-generated threat report feature (front-end)",
   "author": {
     "name": "OWASP Threat Dragon",
     "email": "threat-dragon-project@owasp.org",
     "url": "https://owasp.org/www-project-threat-dragon/"
   },
+  "contributors": [
+    {
+      "name": "Paschoal Diniz",
+      "url": "https://github.com/kbcasurf"
+    }
+  ],
   "license": "Apache-2.0",
   "engines": {
     "npm": ">=11.10.0"
   },
-  "homepage": "https://owasp.org/www-project-threat-dragon/",
+  "homepage": "https://github.com/kbcasurf/threat-dragon-ai#readme",
   "buildState": "-latest",
   "repository": {
     "type": "git",
-    "url": "git://github.com/OWASP/threat-dragon.git"
+    "url": "git+https://github.com/kbcasurf/threat-dragon-ai.git"
   },
   "bugs": {
-    "email": "threat-dragon-project@owasp.org",
-    "url": "https://github.com/OWASP/threat-dragon/issues"
+    "url": "https://github.com/kbcasurf/threat-dragon-ai/issues"
   },
   "dependencies": {
     "@antv/x6": "^2.18.1",
@@ -84,7 +89,7 @@
     "@vue/compat": "^3.5.34",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "axios": "^1.16.0",
+    "axios": "^1.18.1",
     "bootstrap-vue": "^2.23.1",
     "core-js": "^3.49.0",
     "dotenv": "^17.4.2",
@@ -101,7 +106,7 @@
     "vuex": "^4.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.10",
+    "@babel/core": "^7.29.6",
     "@babel/polyfill": "^7.12.1",
     "@babel/register": "^7.29.3",
     "@cyclonedx/webpack-plugin": "^5.3.2",
@@ -119,7 +124,7 @@
     "@vue/vue2-jest": "^27.0.0",
     "@vue/vue3-jest": "^29.2.6",
     "ansi-regex": "5.0.1",
-    "axios": "^1.16.0",
+    "axios": "^1.18.1",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^27.5.1",
     "bootstrap": "^4.6.1",
@@ -140,7 +145,7 @@
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-standard": "^4.1.0",
     "eslint-plugin-vue": "^8.7.1",
-    "geckodriver": "^3.0.2",
+    "geckodriver": "^6.1.1",
     "jest": "^27.5.1",
     "mutationobserver-shim": "^0.3.7",
     "npm-force-resolutions": "^0.0.10",
