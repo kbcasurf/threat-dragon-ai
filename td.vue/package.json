@@ -45,25 +45,30 @@
     "test:unit": "vue-cli-service test:unit --testPathIgnorePatterns tests/unit/desktop/",
     "test:vue": "vue-cli-service test:e2e -C e2e.local.config.js --headless --browser chrome"
   },
-  "description": "OWASP Threat Dragon - a free, open source threat modeling tool",
+  "description": "Fork of OWASP Threat Dragon adding an AI-generated threat report feature (front-end)",
   "author": {
     "name": "OWASP Threat Dragon",
     "email": "threat-dragon-project@owasp.org",
     "url": "https://owasp.org/www-project-threat-dragon/"
   },
+  "contributors": [
+    {
+      "name": "Paschoal Diniz",
+      "url": "https://github.com/kbcasurf"
+    }
+  ],
   "license": "Apache-2.0",
   "engines": {
     "npm": ">=11.10.0"
   },
-  "homepage": "https://owasp.org/www-project-threat-dragon/",
+  "homepage": "https://github.com/kbcasurf/threat-dragon-ai#readme",
   "buildState": "-latest",
   "repository": {
     "type": "git",
-    "url": "git://github.com/OWASP/threat-dragon.git"
+    "url": "git+https://github.com/kbcasurf/threat-dragon-ai.git"
   },
   "bugs": {
-    "email": "threat-dragon-project@owasp.org",
-    "url": "https://github.com/OWASP/threat-dragon/issues"
+    "url": "https://github.com/kbcasurf/threat-dragon-ai/issues"
   },
   "dependencies": {
     "@antv/x6": "^2.18.1",
