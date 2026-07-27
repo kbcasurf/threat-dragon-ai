@@ -21,6 +21,7 @@ Brasil
 BrowserStack
 bundler
 Caddy
+Caddy's
 CentOS
 chai
 chruby
@@ -114,9 +115,11 @@ nightlies
 npm
 npx
 NSIS
+NSS
 nvm
 OAuth
 openssl
+OpenSSL
 orchestrator
 OSX
 owasp
