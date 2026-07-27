@@ -1,5 +1,5 @@
 # NPM: Base image with latest npm (in native host's platform)
-FROM --platform=$BUILDPLATFORM docker.io/library/node:24.16.0-alpine@sha256:fb71d01345f11b708a3553c66e7c74074f2d506400ea81973343d915cb64eef0 AS build-npm-base
+FROM --platform=$BUILDPLATFORM docker.io/library/node:24.18.0-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS build-npm-base
 WORKDIR /build
 
 # Copy over NPM config and enforce usage across all tool calls
@@ -74,7 +74,7 @@ RUN cd td.server && \
 
 
 # Build Docs
-FROM --platform=$BUILDPLATFORM docker.io/library/ruby:4.0.5@sha256:bd5075f77ac998fa5b61e37842717d1a29482b0e02ab74e2a2a8ae371d121b32 AS build-docs
+FROM --platform=$BUILDPLATFORM docker.io/library/ruby:4.0.6@sha256:d9a5d26be31a40fb043069f816ba39139c1f38758aea530341eb7e2c153e4ab4 AS build-docs
 RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     --mount=type=tmpfs,target=/var/lib/dpkg \
     --mount=type=tmpfs,target=/var/cache \
@@ -91,7 +91,7 @@ COPY docs/ .
 RUN bundle exec jekyll build -b ./docs/
 
 
-FROM docker.io/library/node:24.16.0-alpine@sha256:fb71d01345f11b708a3553c66e7c74074f2d506400ea81973343d915cb64eef0 AS final
+FROM docker.io/library/node:24.18.0-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS final
 
 # Copy over NPM config and enforce usage across all tool calls
 # Contains configuration regarding supply chain
