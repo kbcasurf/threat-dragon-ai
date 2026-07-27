@@ -20,31 +20,36 @@
     "test": "cross-env NODE_OPTIONS=--no-experimental-detect-module NODE_ENV=test nyc mocha --require @babel/register --all true --timeout=900 test/*.spec.js test/**/*.spec.js",
     "test:unit": "cross-env NODE_OPTIONS=--no-experimental-detect-module NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha --require @babel/register --all true --timeout=900 test/*.spec.js test/**/*.spec.js"
   },
-  "description": "OWASP Threat Dragon - a free, open source threat modeling tool",
+  "description": "Fork of OWASP Threat Dragon adding an AI-generated threat report feature (server)",
   "author": {
     "name": "OWASP Threat Dragon",
     "email": "threat-dragon-project@owasp.org",
     "url": "https://owasp.org/www-project-threat-dragon/"
   },
+  "contributors": [
+    {
+      "name": "Paschoal Diniz",
+      "url": "https://github.com/kbcasurf"
+    }
+  ],
   "license": "Apache-2.0",
   "engines": {
     "npm": ">=11.10.0"
   },
-  "homepage": "https://owasp.org/www-project-threat-dragon/",
+  "homepage": "https://github.com/kbcasurf/threat-dragon-ai#readme",
   "repository": {
     "type": "git",
-    "url": "git://github.com/OWASP/threat-dragon.git"
+    "url": "git+https://github.com/kbcasurf/threat-dragon-ai.git"
   },
   "bugs": {
-    "email": "threat-dragon-project@owasp.org",
-    "url": "https://github.com/OWASP/threat-dragon/issues"
+    "url": "https://github.com/kbcasurf/threat-dragon-ai/issues"
   },
   "resolutions": {},
   "dependencies": {
     "@babel/runtime": "^7.29.7",
     "@gitbeaker/rest": "^43.8.0",
     "@googleapis/drive": "^20.2.0",
-    "axios": "^1.17.0",
+    "axios": "^1.18.0",
     "bitbucket": "^2.11.0",
     "dotenv": "^16.0.3",
     "express": "^5.0.1",
@@ -63,7 +68,7 @@
     "@babel/plugin-transform-runtime": "^7.29.7",
     "@babel/preset-env": "^7.29.7",
     "@babel/register": "^7.29.3",
-    "@cyclonedx/cyclonedx-npm": "^4.2.1",
+    "@cyclonedx/cyclonedx-npm": "^5.0.0",
     "chai": "^4.3.7",
     "chai-as-promised": "^7.1.1",
     "cross-env": "^7.0.3",

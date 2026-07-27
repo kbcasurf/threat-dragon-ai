@@ -49,24 +49,29 @@
     "DIE",
     "PLOT4ai"
   ],
-  "description": "OWASP Threat Dragon - a free, open source threat modeling tool",
+  "description": "Fork of OWASP Threat Dragon adding an AI-generated threat report feature",
   "author": {
     "name": "OWASP Threat Dragon",
     "email": "threat-dragon-project@owasp.org",
     "url": "https://owasp.org/www-project-threat-dragon/"
   },
+  "contributors": [
+    {
+      "name": "Paschoal Diniz",
+      "url": "https://github.com/kbcasurf"
+    }
+  ],
   "license": "Apache-2.0",
   "engines": {
     "npm": ">=11.10.0"
   },
-  "homepage": "https://owasp.org/www-project-threat-dragon/",
+  "homepage": "https://github.com/kbcasurf/threat-dragon-ai#readme",
   "repository": {
     "type": "git",
-    "url": "git://github.com/OWASP/threat-dragon.git"
+    "url": "git+https://github.com/kbcasurf/threat-dragon-ai.git"
   },
   "bugs": {
-    "email": "threat-dragon-project@owasp.org",
-    "url": "https://github.com/OWASP/threat-dragon/issues"
+    "url": "https://github.com/kbcasurf/threat-dragon-ai/issues"
   },
   "devDependencies": {
     "baseline-browser-mapping": "^2.10.34",
@@ -85,6 +90,6 @@
     "minimatch@<3.0.5": ">=3.0.5",
     "tar-fs": ">=3.0.8",
     "ws": ">=8.18.0",
-    "shell-quote": ">=1.8.4"
+    "shell-quote": ">=1.10.0"
   }
 }
