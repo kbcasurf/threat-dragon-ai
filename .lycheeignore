@@ -2,6 +2,7 @@
 
 # links referred to in documentation, not intended as actual links
 http://localhost
+https://localhost
 http://127.0.0.1
 
 # incorrectly get 'Network error: Forbidden'

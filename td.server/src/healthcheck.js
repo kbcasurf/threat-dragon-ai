@@ -1,7 +1,10 @@
 // healthcheck is called periodically from within the docker container
 
-import env from 'env/Env.js';
-import loggerHelper from 'helpers/logger.helper.js';
+import env from './env/Env.js';
+import envConfig from './config/env.config.js';
+import loggerHelper from './helpers/logger.helper.js';
+
+envConfig.tryLoadDotEnv();
 
 const logger = loggerHelper.get('healthcheck.js');
 const http = require('http');
