@@ -3,13 +3,19 @@
   width="200" alt="Threat Dragon Logo"/>
 </p>
 
-[![GitHub license](https://img.shields.io/github/license/owasp/threat-dragon.svg)](license.txt)
-[![Build status](https://img.shields.io/github/check-runs/OWASP/threat-dragon/main?label=CI)][build]
-[![GitHub release](https://img.shields.io/github/v/release/owasp/threat-dragon?sort=semver)][latest]
-[![OWASP Production](https://img.shields.io/badge/owasp-production%20project-brightgreen)](https://owasp.org/projects/)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9266/badge)][practices]
+[![GitHub license](https://img.shields.io/github/license/kbcasurf/threat-dragon-ai.svg)](license.txt)
+[![Build status](https://img.shields.io/github/check-runs/kbcasurf/threat-dragon-ai/main?label=CI)][build]
+[![Fork of OWASP Threat Dragon](https://img.shields.io/badge/fork%20of-OWASP%20Threat%20Dragon-blue)][project]
 
-# OWASP Threat Dragon
+# OWASP Threat Dragon — AI Report fork
+
+> **Fork notice.** This repository is a fork of [OWASP Threat Dragon][project], maintained by
+> [Paschoal Diniz][fork-owner]. It's an applied AppSec portfolio project: the description below of
+> Threat Dragon itself is the upstream OWASP project's work, credited throughout this README. The
+> addition made specifically in this fork is the **AI Threat Report** feature covered in the
+> security note further down. General Threat Dragon documentation, releases, and community links
+> in this README point at the upstream OWASP project; issues, PRs, and questions about this fork's
+> own changes belong in [this repository's issue tracker][fork-issues].
 
 [OWASP][owasp] [Threat Dragon][project] is a free, open-source, cross-platform threat modeling application.
 It is used to draw threat modeling diagrams and to list threats for elements in the diagram.
@@ -93,9 +99,11 @@ please see the [legacy-v1.x branch](https://github.com/OWASP/threat-dragon/tree/
 
 Install [git](https://git-scm.com/downloads/) and [node.js][node] which includes the node package manager npm
 
-Clone the repository using: `git clone https://github.com/owasp/threat-dragon.git`
+Clone this fork using: `git clone https://github.com/kbcasurf/threat-dragon-ai.git`
+(or [the upstream OWASP repository][project-repo] if you want the original project without the
+AI Threat Report feature)
 
-This downloads the code into a `threat-dragon` directory and the application code is in two sub-folders,
+This downloads the code into a `threat-dragon-ai` directory and the application code is in two sub-folders,
 one for the back-end application (`td.server`) and one for the front-end (`td.vue`).
 
 Install from the top directory of the project using : `npm install`
@@ -153,9 +161,27 @@ first configure your [environment using dotenv][config] and run from the top dir
 
 Using http port 8080 and accessing Threat Dragon on `http://localhost:8080/`.
 
+### Running behind a reverse proxy
+
+`td.server/src/app.js` sets `app.set('trust proxy', true)`, which tells Express to
+trust the entire `X-Forwarded-*` header chain unconditionally. If you deploy Threat
+Dragon behind your own reverse proxy (nginx, Traefik, Caddy, an ALB/load balancer,
+etc.), this setting means the app trusts `X-Forwarded-For` from anyone — including a
+client that sets the header itself — which lets a malicious client spoof its
+apparent IP and bypass the app's IP-based rate limiting. `express-rate-limit`
+itself flags this configuration as unsafe (`ERR_ERL_PERMISSIVE_TRUST_PROXY`).
+
+Before deploying behind a reverse proxy, a system administrator should change this
+line to match the actual network topology — for example `app.set('trust proxy', 1)`
+to trust exactly one hop (the proxy directly in front of the app), or a specific
+IP/CIDR value identifying the proxy, rather than the permissive `true`. See the
+[Express `trust proxy` documentation][trust-proxy] and the
+[`express-rate-limit` guidance on this error][erl-trust-proxy] for how to pick the
+right value for your setup.
+
 ### Contributing
 
-[![GitHub contributors](https://img.shields.io/github/contributors/owasp/threat-dragon.svg)][contributors]
+[![GitHub contributors](https://img.shields.io/github/contributors/kbcasurf/threat-dragon-ai.svg)][contributors]
 
 Pull requests, feature requests, bug reports and feedback of any kind are very welcome,
 please refer to the page for [contributors](contributing.md).
@@ -165,7 +191,10 @@ We are trying to keep the test coverage relatively high so include tests in your
 
 ### Contact
 
-The easiest way to get in contact with the Threat Dragon community is
+For questions, bugs, or feedback about this fork specifically — including the AI Threat Report
+feature — please open an [issue in this repository][fork-issues].
+
+For the upstream Threat Dragon project, the easiest way to get in contact with the community is
 by emailing the [OWASP google group](mailto:threat-dragon-project@owasp.org).
 The OWASP Slack channel [#project-threat-dragon][td-slack] is a good source of information,
 although you may [need to subscribe][subscribe] first.
@@ -174,10 +203,18 @@ You can follow the Threat Dragon on [Bluesky][bluesky].
 
 ### Vulnerability disclosure
 
-If you find a vulnerability in this project please let us know ASAP and we will fix it as a priority.
-For secure disclosure, please see the [security policy](security.md).
+If you find a vulnerability introduced by this fork (the AI Threat Report feature, the local
+Caddy/TLS tooling, or anything else changed here), please open a
+[security advisory on this repository][fork-advisory] rather than the upstream project's.
+
+For vulnerabilities in the upstream Threat Dragon codebase, please let the OWASP project know ASAP
+so it can be fixed as a priority — see the [upstream security policy](security.md).
 
 ### Project leaders
+
+**This fork** is maintained by [Paschoal Diniz][fork-owner].
+
+**Upstream OWASP Threat Dragon** is led by:
 
 - [Mike Goodwin](mailto:mike.goodwin@owasp.org)
 - [Jon Gadsden](mailto:jon.gadsden@owasp.org)
@@ -188,22 +225,26 @@ For secure disclosure, please see the [security policy](security.md).
 Threat Dragon: _making threat modeling less threatening_
 
 [bluesky]: https://bsky.app/profile/threatdragon.bsky.social
-[build]: https://github.com/OWASP/threat-dragon/actions/workflows/push.yaml
+[build]: https://github.com/kbcasurf/threat-dragon-ai/actions/workflows/push.yaml
 [bitbucket]: https://www.threatdragon.com/docs/configure/bitbucket.html
-[contributors]: https://github.com/OWASP/threat-dragon/graphs/contributors
+[contributors]: https://github.com/kbcasurf/threat-dragon-ai/graphs/contributors
 [demo]: https://www.threatdragon.com/#/
 [docs]: https://www.threatdragon.com/docs/
 [config]: https://www.threatdragon.com/docs/configure/configure.html
+[erl-trust-proxy]: https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/
+[fork-advisory]: https://github.com/kbcasurf/threat-dragon-ai/security/advisories/new
+[fork-issues]: https://github.com/kbcasurf/threat-dragon-ai/issues
+[fork-owner]: https://github.com/kbcasurf
 [github]: https://www.threatdragon.com/docs/configure/github.html
 [gitlab]: https://www.threatdragon.com/docs/configure/gitlab.html
-[latest]: https://github.com/owasp/threat-dragon/releases/latest/
-[license]: https://github.com/OWASP/threat-dragon/blob/v2.2.0/license.txt
+[license]: https://github.com/kbcasurf/threat-dragon-ai/blob/main/license.txt
 [manifesto]: https://www.threatmodelingmanifesto.org/
 [node]: https://nodejs.org/en/download
 [notes]: https://www.threatdragon.com/docs/development/development.html
 [owasp]: https://owasp.org/
-[practices]: https://www.bestpractices.dev/en/projects/9266
 [project]: https://owasp.org/www-project-threat-dragon/
+[project-repo]: https://github.com/OWASP/threat-dragon
 [releases]: https://github.com/OWASP/threat-dragon/releases
 [subscribe]: https://owasp.org/slack/invite
 [td-slack]: https://owasp.slack.com/messages/CURE8PQ68
+[trust-proxy]: https://expressjs.com/en/guide/behind-proxies.html
