@@ -1,2 +1,12 @@
 # ignore until Vue2 to Vue3 upgrade
 CVE-2025-15284
+
+# brace-expansion vendored inside gaxios's own node_modules (Google OAuth
+# client dependency used by td.server). No non-breaking fix is available:
+# the only npm-provided fix bumps mocha (a dev dependency, unrelated to
+# gaxios) to a new major version just because it shares the same lockfile
+# resolution graph. Same exception documented in
+# .github/workflows/.npm-audit-ignore.txt (as the equivalent GHSA IDs).
+# Remove once gaxios ships a release with a patched brace-expansion.
+CVE-2026-13149
+CVE-2026-14257

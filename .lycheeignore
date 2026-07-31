@@ -28,6 +28,10 @@ www.linddun.org/
 # Too many redirects: error following redirect for docker tags
 hub.docker.com/repository/docker/threatdragon/owasp-threat-dragon/tags
 
+# same page, current URL format (docs/release-process.md); Docker Hub
+# intermittently returns 500 for it
+hub.docker.com/r/threatdragon/owasp-threat-dragon/tags
+
 # not intended as a link in itself
 console.developers.google.com/
 

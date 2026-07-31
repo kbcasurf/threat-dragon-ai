@@ -17,6 +17,9 @@
 !.github/workflows/*.yaml
 !.github/workflows/.trivyignore
 !.github/workflows/.zap-rules-web.tsv
+!.github/workflows/.npm-audit-ignore.txt
+!.github/scripts/
+!.github/scripts/*.sh
 !.gitignore
 !.gitattributes
 !.editorconfig
