@@ -120,33 +120,43 @@ jobs:
     needs: [server_unit_tests, site_unit_tests, desktop_unit_tests]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # This job intentionally diverges from this repo's usual SHA-pinning
+      # convention: it mirrors kbcasurf/sammwise-ai's .github/workflows/action.yml
+      # step-for-step (same action versions, same absence of cache/multi-arch/
+      # provenance), because that is the only configuration confirmed to
+      # actually push to GHCR successfully. Every deviation tried here first
+      # (SHA-pinned docker/build-push-action v7.3.0, with/without multi-arch,
+      # with/without provenance:false) failed with the same
+      # "unexpected status from HEAD request ... 403 Forbidden" on a new
+      # package - a known, unresolved upstream issue with no documented fix
+      # (see docker/build-push-action#981, #463, #1240).
+      - uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
-
+        uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
-          install: true
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build image (local, no push)
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@v4
         with:
-          context: ./
+          context: .
           file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
           push: false
           load: true
           tags: threat-dragon-ai:scan
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: threat-dragon-ai:scan
-          format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
           trivyignores: '.github/workflows/.trivyignore'
@@ -157,28 +167,13 @@ jobs:
           # is pinned, so scanning them here is noise, not real runtime risk.
           skip-dirs: '/usr/local/lib/node_modules/npm'
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+      - name: Push image
+        uses: docker/build-push-action@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # docker/build-push-action v5+ generates provenance attestation manifests
-      # by default on every push (single- or multi-platform alike). GHCR fails
-      # to accept these on the first push of a brand-new package (blob HEAD
-      # request returns 403 Forbidden). Confirmed by testing single-platform
-      # first (still failed, still emitted an attestation manifest) before
-      # landing on this fix. Disabling provenance avoids the bug entirely and
-      # keeps multi-arch support, unlike downgrading the action version.
-      - name: Build for supported architectures and push to GHCR
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: ./
+          context: .
           file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/${{ github.repository_owner }}/threat-dragon-ai:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
