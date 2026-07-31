@@ -1,0 +1,17 @@
+# npm audit exceptions
+#
+# One GitHub Advisory URL per line. Lines starting with # (and blank lines)
+# are ignored. Used by the npm_audit job in pull_request.yaml to filter
+# advisories that are known and accepted, so unrelated PRs are not blocked
+# by upstream issues we cannot fix ourselves yet.
+
+# brace-expansion DoS (exponential-time expansion / unbounded expansion OOM).
+# Vendored inside gaxios's own node_modules (Google OAuth client dependency
+# used by td.server), not the top-level brace-expansion. The non-breaking
+# `npm audit fix` does not touch it: the only npm-provided fix requires
+# `--force`, which bumps mocha (a dev dependency, unrelated to gaxios) to a
+# new major version just because it shares the same lockfile resolution
+# graph. Remove these two lines once gaxios ships a release with a patched
+# brace-expansion, or once a scoped `overrides` entry is added instead.
+https://github.com/advisories/GHSA-3jxr-9vmj-r5cp
+https://github.com/advisories/GHSA-mh99-v99m-4gvg

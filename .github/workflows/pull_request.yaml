@@ -236,11 +236,13 @@ jobs:
 
       - name: Audit server dependencies
         working-directory: td.server
-        run: npm audit --omit=dev --audit-level=high
+        run: |
+          ../.github/scripts/npm-audit-gate.sh
 
       - name: Audit site dependencies
         working-directory: td.vue
-        run: npm audit --omit=dev --audit-level=high
+        run: |
+          ../.github/scripts/npm-audit-gate.sh
 
   semgrep:
     name: Semgrep (report-only)
