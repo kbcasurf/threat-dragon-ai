@@ -10,3 +10,11 @@ CVE-2025-15284
 # Remove once gaxios ships a release with a patched brace-expansion.
 CVE-2026-13149
 CVE-2026-14257
+
+# docs/ contains fake example credentials (BITBUCKET_CLIENT_ID/SECRET =
+# 'deadbeef...') used purely as documentation placeholders in
+# docs/configure/*.md and the generated Jekyll site (docs/configure/*.html,
+# docs/assets/search.json). Trivy's secret scanner flags these as real
+# Bitbucket client IDs. Scoped to docs/ only and to this specific rule so a
+# real secret elsewhere in the image would still be caught.
+bitbucket-client-id docs/*
