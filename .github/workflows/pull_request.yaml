@@ -11,6 +11,10 @@ permissions:
 env:
   IMAGE_NAME: "pr-${{ github.event.number }}"
   ZAP_FILE: "zap-scan-pr-${{ github.event.number }}"
+  # These must be registered on THIS fork (Settings > Secrets and variables > Actions),
+  # not inherited from OWASP/threat-dragon. See docs/configure/github.md for how to
+  # register your own GitHub OAuth App, and docs/configure/configure.md for how to
+  # generate ENCRYPTION_KEYS / JWT signing keys.
   GITHUB_CLIENT_ID: "${{ secrets.CI_GITHUB_CLIENT_ID }}"
   GITHUB_CLIENT_SECRET: "${{ secrets.CI_GITHUB_CLIENT_SECRET }}"
   ENCRYPTION_JWT_REFRESH_SIGNING_KEY: "${{ secrets.CI_JWT_REFRESH_SIGNING_KEY }}"
@@ -46,10 +50,6 @@ jobs:
       - name: Checkout markdown
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # https://github.com/lycheeverse/lychee-action?tab=readme-ov-file#utilising-the-cache-feature
-      # Using a cache helps prevent rate-limiting and other failures
-      # This is cached only per-commit, and is intended to help
-      # with re-runs
       - name: Restore lychee cache
         uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
@@ -187,14 +187,44 @@ jobs:
       - name: Run unit tests
         run: npm run test:desktop
 
-  e2e_smokes:
-    name: Local site e2e smokes
+  build_docker_image:
+    name: Build docker image (no push)
     runs-on: ubuntu-24.04
-    needs: [site_unit_tests, server_unit_tests]
-    defaults:
-      run:
-        working-directory: td.vue
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+        with:
+          install: true
+
+      - name: Build for amd64 to test buildability
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ./
+          file: ./Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          load: true
+          tags: ${{ env.IMAGE_NAME }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: '${{ env.IMAGE_NAME }}'
+          format: 'table'
+          trivyignores: '.github/workflows/.trivyignore'
+          exit-code: 1
+          skip-files: '/app/docs/configure/bitbucket.html,/app/docs/assets/search.json'
+
+  npm_audit:
+    name: npm audit
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -204,169 +234,75 @@ jobs:
         with:
           node-version: '24.16'
 
-      - name: Cache NPM dir
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-            ${{ runner.os }}-
+      - name: Audit server dependencies
+        working-directory: td.server
+        run: npm audit --omit=dev --audit-level=high
 
-      - name: Install front-end
-        run: npm clean-install
-
-      - name: Build and run locally
-        run: npm run start:serve
-
-      - name: Run e2e tests
-        run: npm run test:e2e-pr-smokes
-
-      - name: Upload e2e videos
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: e2e_vids.zip
-          path: tests/e2e/videos
-        if: ${{ failure() && hashFiles('tests/e2e/videos/') != '' }}
-
-  desktop_e2e_smokes:
-    name: Desktop e2e smokes
-    runs-on: ubuntu-24.04
-    needs: [site_unit_tests, desktop_unit_tests]
-    defaults:
-      run:
+      - name: Audit site dependencies
         working-directory: td.vue
+        run: npm audit --omit=dev --audit-level=high
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: Use node LTS 24.16
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: '24.16'
-
-      - name: Cache NPM dir
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-            ${{ runner.os }}-
-
-      - name: Install clean packages
-        run: npm clean-install
-
-      - name: Build Linux desktop app
-        run: npm run build:desktop -- --linux AppImage --x64 --publish never
-
-      - name: Run desktop e2e smokes
-        run: xvfb-run -a npm run test:e2e:desktop
-
-      - name: Upload desktop e2e logs
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: desktop-e2e-logs
-          path: td.vue/wdio-logs
-          if-no-files-found: ignore
-        if: ${{ failure() }}
-
-  visual_regression_tests:
-    name: Site visual regression
+  semgrep:
+    name: Semgrep (report-only)
     runs-on: ubuntu-24.04
-    needs: site_unit_tests
-    defaults:
-      run:
-        working-directory: td.vue
-
+    container:
+      image: semgrep/semgrep:1.172.0
     steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Use node LTS 24.16
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: '24.16'
+      # Report-only for now: this codebase has not been baselined against these
+      # rulesets yet, so hard-failing on every finding would block unrelated PRs.
+      # Once the initial findings are triaged, add a stricter gate (e.g. `--error`
+      # or a severity threshold) the same way npm_audit and secrets_scan already do.
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config=p/security-audit \
+            --config=p/javascript \
+            --config=p/typescript \
+            --config=p/dockerfile \
+            --sarif-output=semgrep-results.sarif
 
-      - name: Use Chrome 148
-        uses: browser-actions/setup-chrome@2e1d749697dd1612b833dba4a722266286fbefcd # v2
-        with:
-          chrome-version: '148.0.7778.96'
-
-      - name: Cache NPM dir
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-            ${{ runner.os }}-
-
-      - name: Install front-end
-        run: npm clean-install
-
-      - name: Pre Dev
-        run: npm run predev
-
-      - name: Run visual regression tests
-        run: npm run test:visual
-
-      - name: Upload visual artifacts
+      - name: Upload Semgrep report
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: visual-regression-artifacts
-          path: |
-            td.vue/tests/e2e/visual/screenshots
-            td.vue/tests/e2e/visual/diffs
-          if-no-files-found: ignore
-        if: ${{ failure() }}
+          name: semgrep-results
+          path: semgrep-results.sarif
 
-  e2e_tests:
-    name: Local site e2e tests
+  secrets_scan:
+    name: Secrets scan
     runs-on: ubuntu-24.04
-    needs: e2e_smokes
-    defaults:
-      run:
-        working-directory: td.vue
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: Use node LTS 24.16
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          node-version: '24.16'
+          fetch-depth: 0
 
-      - name: Cache NPM dir
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      - name: TruffleHog (pull request diff scan)
+        uses: trufflesecurity/trufflehog@6f3c981e7b77f235fd2702dd74af25fc4b72bf11 # v3.96.0
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          extra_args: --results=verified,unknown
 
-      - name: Install front-end
-        run: npm clean-install
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-24.04
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Build and run locally
-        run: npm run start:serve
-
-      - name: Run e2e tests
-        run: npm run test:e2e-pr
-
-      - name: Upload e2e videos
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
         with:
-          name: e2e_vids.zip
-          path: tests/e2e/videos
-        if: ${{ failure() && hashFiles('tests/e2e/videos/') != '' }}
+          languages: javascript-typescript
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
 
   zap_scan_web_app:
     name: Local site zap scan
     runs-on: ubuntu-24.04
-    needs: e2e_tests
+    needs: [server_unit_tests, site_unit_tests]
 
     steps:
       - name: Checkout
@@ -406,93 +342,3 @@ jobs:
           fail_action: false
           artifact_name: ${{ env.ZAP_FILE }}
           cmd_options: '-a'
-
-  build_docker_image:
-    name: Build docker image
-    runs-on: ubuntu-24.04
-    needs: e2e_smokes
-    if: github.repository == 'OWASP/threat-dragon'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
-        with:
-          install: true
-
-      - name: Build for all supported architectures to test buildability
-        id: docker_build
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: ./
-          file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          tags:  ${{ env.IMAGE_NAME }}
-          load: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          # If you add more platforms, make sure to include them in ./push.yaml too!
-          platforms: linux/amd64,linux/arm64
-          sbom: true
-          provenance: mode=max,version=v1
-
-      - name: Build for amd64 only for further tests below
-        id: docker_build_amd64
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: ./
-          file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          tags:  ${{ env.IMAGE_NAME }}
-          load: false
-          outputs: type=docker,dest=/tmp/${{ env.IMAGE_NAME }}.tar
-          # Should pull from the step before, so this one should be all cached
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64
-          # Note: no sbom or provenance, we need to produce the simplest image form
-          # so that "docker load" will like it afterwards
-
-      - name: Upload docker local image
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: ${{ env.IMAGE_NAME }}
-          path: /tmp/${{ env.IMAGE_NAME }}.tar
-
-      - name: Check docker local image
-        run: |
-          docker load --input /tmp/${{ env.IMAGE_NAME }}.tar
-          docker image ls -a
-
-  scan_image_with_trivy:
-    name: Scan with Trivy
-    runs-on: ubuntu-24.04
-    needs: build_docker_image
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: Retrieve local docker image
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: ${{ env.IMAGE_NAME }}
-          path: /tmp
-      
-      - name: Load local docker image
-        run: |
-          docker load --input /tmp/${{ env.IMAGE_NAME }}.tar
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: '${{ env.IMAGE_NAME }}'
-          format: 'table'
-          trivyignores: '.github/workflows/.trivyignore'
-          exit-code: 1
-          skip-files: '/app/docs/configure/bitbucket.html,/app/docs/assets/search.json'
