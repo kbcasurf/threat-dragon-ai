@@ -221,6 +221,12 @@ jobs:
           trivyignores: '.github/workflows/.trivyignore'
           exit-code: 1
           skip-files: '/app/docs/configure/bitbucket.html,/app/docs/assets/search.json'
+          # The Dockerfile force-upgrades the global npm CLI (`npm i -g npm@latest`)
+          # as build tooling only; it is never invoked at runtime (ENTRYPOINT runs
+          # `node index.js` directly). npm's own vendored deps (tar, brace-expansion,
+          # etc.) get new CVEs on their own cadence regardless of which npm version
+          # is pinned, so scanning them here is noise, not real runtime risk.
+          skip-dirs: '/usr/local/lib/node_modules/npm'
 
   npm_audit:
     name: npm audit

@@ -150,6 +150,12 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: '1'
           trivyignores: '.github/workflows/.trivyignore'
+          # The Dockerfile force-upgrades the global npm CLI (`npm i -g npm@latest`)
+          # as build tooling only; it is never invoked at runtime (ENTRYPOINT runs
+          # `node index.js` directly). npm's own vendored deps (tar, brace-expansion,
+          # etc.) get new CVEs on their own cadence regardless of which npm version
+          # is pinned, so scanning them here is noise, not real runtime risk.
+          skip-dirs: '/usr/local/lib/node_modules/npm'
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
