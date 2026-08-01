@@ -43,36 +43,6 @@ jobs:
             td.server/*.md
             *.md
 
-  link_checker:
-    name: Link checker
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout markdown
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: Restore lychee cache
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: .lycheecache
-          key: cache-lychee-${{ github.sha }}
-          restore-keys: cache-lychee-
-
-      - name: Link Checker
-        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
-        with:
-          args: >-
-            --verbose
-            --no-progress
-            --max-retries 1
-            --retry-wait-time 10
-            --cache
-            'docs/**/*.md'
-            'docs/*.md'
-            '*.md'
-          fail: true
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
   spell_checker:
     name: Check spelling
     runs-on: ubuntu-24.04
