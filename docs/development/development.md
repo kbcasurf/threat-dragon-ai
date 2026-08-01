@@ -107,6 +107,13 @@ proxy that terminates TLS locally, so the browser↔app leg is HTTPS instead of 
 HTTP. This is separate from (and unrelated to) the app→LLM-provider connection, which
 is already required to be HTTPS at the code level regardless of this setup.
 
+Note: `docker-compose.yml`'s `app` service now pulls the published
+`ghcr.io/kbcasurf/threat-dragon-ai:latest` image by default, rather than building
+from your working tree. To exercise local code changes through this Caddy/TLS
+setup, first build and tag your own image to match that reference —
+`docker build -t ghcr.io/kbcasurf/threat-dragon-ai:latest .` — so `docker compose
+up -d` picks up your locally-built image instead of pulling from the registry.
+
 * create a `.env` file from `example.env` as described above
 * start the stack: `docker compose up -d`
 * the first time only, trust Caddy's local CA on your machine:

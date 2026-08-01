@@ -1,9 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: threat-dragon:local
+    image: ghcr.io/kbcasurf/threat-dragon-ai:latest
     env_file:
       - .env
     restart: unless-stopped

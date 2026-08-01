@@ -131,23 +131,32 @@ With both front and back end running, access with a browser at `http://localhost
 If using `npm start`, stop both the back-end server and the front-end application
 from the top directory with command `npm stop`. Otherwise break out of both the server and vue front-end.
 
-## Docker (from dockerhub)
+## Docker (from GitHub Container Registry)
 
-Threat Dragon maintains docker images within the OWASP organisation area on Dockerhub.
-Each release is tagged as `v{major}.{minor}.{patch}`, eg `v2.2.0`:
+This fork publishes a docker image containing the AI Threat Report feature to
+the GitHub Container Registry on every push to `main`, tagged `latest`:
 
-- `docker pull owasp/threat-dragon:v2.2.0`
-
-The latest tag (which is the default) may well be a development version
-so use the `stable` tag, which will always be the latest official release:
-
-- `docker pull threatdragon/owasp-threat-dragon:stable`
+- `docker pull ghcr.io/kbcasurf/threat-dragon-ai:latest`
 - For MacOS and Linux:
-- `docker run -it --rm -p 8080:3000 -v $(pwd)/.env:/app/.env threatdragon/owasp-threat-dragon:v2.2.0`
+- `docker run -it --rm -p 8080:3000 -v $(pwd)/.env:/app/.env ghcr.io/kbcasurf/threat-dragon-ai:latest`
 - For Windows:
-- `docker run -it --rm -p 8080:3000 -v %CD%/.env:/app/.env threatdragon/owasp-threat-dragon:v2.2.0`
+- `docker run -it --rm -p 8080:3000 -v %CD%/.env:/app/.env ghcr.io/kbcasurf/threat-dragon-ai:latest`
 
 Assuming that you are using http port 8080 and accessing Threat Dragon on `http://localhost:8080/`.
+
+If you want the official upstream images instead (without the AI Threat Report
+feature), see [the upstream OWASP project][project-repo].
+
+### Docker Compose
+
+`docker-compose.yml` at the top of the repo runs the same GHCR image behind a
+Caddy reverse proxy on ports 80/443. Configure your [environment using
+dotenv][config], then from the top directory of the project:
+
+- `docker compose up -d`
+
+This pulls `ghcr.io/kbcasurf/threat-dragon-ai:latest` and terminates TLS via
+Caddy using the `Caddyfile` in this directory.
 
 ### Docker (local build)
 
