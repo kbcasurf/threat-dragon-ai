@@ -1,15 +1,23 @@
 # ignore until Vue2 to Vue3 upgrade
 CVE-2025-15284
 
-# brace-expansion vendored inside gaxios's own node_modules (Google OAuth
-# client dependency used by td.server). No non-breaking fix is available:
-# the only npm-provided fix bumps mocha (a dev dependency, unrelated to
-# gaxios) to a new major version just because it shares the same lockfile
-# resolution graph. Same exception documented in
-# .github/workflows/.npm-audit-ignore.txt (as the equivalent GHSA IDs).
-# Remove once gaxios ships a release with a patched brace-expansion.
-CVE-2026-13149
+# brace-expansion + ip-address vulnerabilities vendored *inside npm itself*
+# (usr/local/lib/node_modules/npm/node_modules), installed by
+# `npm i -g npm@latest` in the Dockerfile. Not from td.server/td.vue's own
+# dependency trees - those are patched as of the ip-address/brace-expansion
+# security bumps merged 2026-08-07. As of npm 12.0.2, the vendored copies are:
+#   brace-expansion 5.0.7 (needs 5.0.8 for CVE-2026-14257, 5.0.9 for CVE-2026-69152)
+#   ip-address      10.2.0 (needs 10.3.1 for CVE-2026-69192)
+# Since these come from `npm@latest`, they can only be resolved upstream by
+# npm shipping a newer release with bumped vendored deps - not by anything
+# in this repo's package.json/package-lock.json. Re-check by running the
+# Dockerfile's `npm i -g npm@latest` step and scanning the result with trivy.
+# (A related, now-fixed CVE-2026-13149 was removed from this file: verified
+# via the same method that npm 12.0.2's vendored brace-expansion 5.0.7
+# already satisfies its fix version.)
 CVE-2026-14257
+CVE-2026-69152
+CVE-2026-69192
 
 # docs/ contains fake example credentials (BITBUCKET_CLIENT_ID/SECRET =
 # 'deadbeef...') used purely as documentation placeholders in
