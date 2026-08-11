@@ -74,7 +74,7 @@
     "url": "https://github.com/kbcasurf/threat-dragon-ai/issues"
   },
   "devDependencies": {
-    "baseline-browser-mapping": "^2.11.1",
+    "baseline-browser-mapping": "^2.11.9",
     "npm-run-all2": "^8.0.4",
     "rimraf": "^6.1.3"
   },
