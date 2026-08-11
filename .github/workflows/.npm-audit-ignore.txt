@@ -4,18 +4,3 @@
 # are ignored. Used by the npm_audit job in pull_request.yaml to filter
 # advisories that are known and accepted, so unrelated PRs are not blocked
 # by upstream issues we cannot fix ourselves yet.
-
-# nanoid <3.3.17 (custom generators can loop indefinitely when size is
-# zero), high severity. In td.vue, nanoid is a transitive dependency of
-# postcss; npm dedupes postcss to a single copy shared by the
-# @vue/cli-service devDependency path and the vue -> @vue/compiler-sfc
-# production path, so `npm audit --omit=dev` still flags it even though
-# nanoid itself has no other production-reachable path. Confirmed via CI
-# logs that this blocks every open PR identically (not caused by any one
-# PR's changes) - see PR that added this line for the investigation.
-# Fix is nanoid@3.3.17, published 2026-08-07, but AGENTS.md requires a
-# 10-day minimum dependency release age, so it is not eligible until
-# 2026-08-17. Remove this exception and add a `nanoid` override in
-# td.vue/package.json once nanoid@3.3.17+ is >=10 days old - re-run
-# `npm audit --omit=dev` in td.vue to confirm before removing.
-https://github.com/advisories/GHSA-2v37-7h3g-55p8
