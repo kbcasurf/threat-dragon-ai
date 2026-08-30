@@ -19,6 +19,16 @@ CVE-2026-14257
 CVE-2026-69152
 CVE-2026-69192
 
+# libssl3/libcrypto3 openssl DoS via unbounded memory growth in QUIC server.
+# Fixed upstream at 3.5.8-r0, but as of 2026-08-30 no Alpine package repo
+# (3.23 or 3.24) has published a build with the fix yet - confirmed by
+# pulling node:24.18.1-alpine, node:24.19.0-alpine and node:24.20.0-alpine
+# (the newest available tag) and checking `apk list --installed`: all three
+# report libssl3-3.5.7-r0 / libcrypto3-3.5.7-r0. Not something a Dockerfile
+# base-image bump can fix. Re-check by pulling the current node:24-alpine
+# tag and checking for libssl3/libcrypto3 >= 3.5.8-r0.
+CVE-2026-14456
+
 # docs/ contains fake example credentials (BITBUCKET_CLIENT_ID/SECRET =
 # 'deadbeef...') used purely as documentation placeholders in
 # docs/configure/*.md and the generated Jekyll site (docs/configure/*.html,
