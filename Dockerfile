@@ -1,5 +1,5 @@
 # NPM: Base image with latest npm (in native host's platform)
-FROM --platform=$BUILDPLATFORM docker.io/library/node:24.18.0-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS build-npm-base
+FROM --platform=$BUILDPLATFORM docker.io/library/node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43 AS build-npm-base
 WORKDIR /build
 
 # Copy over NPM config and enforce usage across all tool calls
@@ -91,7 +91,14 @@ COPY docs/ .
 RUN bundle exec jekyll build -b ./docs/
 
 
-FROM docker.io/library/node:24.18.0-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS final
+FROM docker.io/library/node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43 AS final
+
+# The base image's baked-in libssl3/libcrypto3 (3.5.7-r0) carries several
+# openssl CVEs (e.g. CVE-2026-14456) fixed upstream at 3.5.8-r0. Alpine's
+# v3.24/main repo already serves the fixed build even though the published
+# node:*-alpine image hasn't been rebuilt with it yet, so pull it in directly
+# instead of waiting on the next base-image bump.
+RUN apk update && apk upgrade --no-cache libssl3 libcrypto3
 
 # Copy over NPM config and enforce usage across all tool calls
 # Contains configuration regarding supply chain
