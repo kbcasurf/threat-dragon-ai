@@ -5,17 +5,18 @@
 
 [![GitHub license](https://img.shields.io/github/license/kbcasurf/threat-dragon-ai.svg)](license.txt)
 [![Build status](https://img.shields.io/github/check-runs/kbcasurf/threat-dragon-ai/main?label=CI)][build]
-[![Fork of OWASP Threat Dragon](https://img.shields.io/badge/fork%20of-OWASP%20Threat%20Dragon-blue)][project]
+[![Clone of OWASP Threat Dragon](https://img.shields.io/badge/clone%20of-OWASP%20Threat%20Dragon-blue)][project]
 
-# OWASP Threat Dragon — AI Report fork
+# OWASP Threat Dragon — AI Report clone
 
-> **Fork notice.** This repository is a fork of [OWASP Threat Dragon][project], maintained by
-> [Paschoal Diniz][fork-owner]. It's an applied AppSec portfolio project: the description below of
+> **Clone notice.** This repository is an independently maintained clone of
+> [OWASP Threat Dragon][project], maintained by [Paschoal Diniz][fork-owner]. It is not a GitHub
+> fork of the upstream project. It's an applied AppSec portfolio project: the description below of
 > Threat Dragon itself is the upstream OWASP project's work, credited throughout this README. The
-> addition made specifically in this fork is the **AI Threat Report** feature covered in the
+> addition made specifically in this clone is the **AI Threat Report** feature covered in the
 > security note further down. General Threat Dragon documentation, releases, and community links
-> in this README point at the upstream OWASP project; issues, PRs, and questions about this fork's
-> own changes belong in [this repository's issue tracker][fork-issues].
+> in this README point at the upstream OWASP project; issues, PRs, and questions about this
+> clone's own changes belong in [this repository's issue tracker][fork-issues].
 
 [OWASP][owasp] [Threat Dragon][project] is a free, open-source, cross-platform threat modeling application.
 It is used to draw threat modeling diagrams and to list threats for elements in the diagram.
@@ -99,7 +100,7 @@ please see the [legacy-v1.x branch](https://github.com/OWASP/threat-dragon/tree/
 
 Install [git](https://git-scm.com/downloads/) and [node.js][node] which includes the node package manager npm
 
-Clone this fork using: `git clone https://github.com/kbcasurf/threat-dragon-ai.git`
+Clone this repository using: `git clone https://github.com/kbcasurf/threat-dragon-ai.git`
 (or [the upstream OWASP repository][project-repo] if you want the original project without the
 AI Threat Report feature)
 
@@ -133,7 +134,7 @@ from the top directory with command `npm stop`. Otherwise break out of both the 
 
 ## Docker (from GitHub Container Registry)
 
-This fork publishes a docker image containing the AI Threat Report feature to
+This clone publishes a docker image containing the AI Threat Report feature to
 the GitHub Container Registry on every push to `main`, tagged `latest`:
 
 - `docker pull ghcr.io/kbcasurf/threat-dragon-ai:latest`
@@ -200,7 +201,7 @@ We are trying to keep the test coverage relatively high so include tests in your
 
 ### Contact
 
-For questions, bugs, or feedback about this fork specifically — including the AI Threat Report
+For questions, bugs, or feedback about this clone specifically — including the AI Threat Report
 feature — please open an [issue in this repository][fork-issues].
 
 For the upstream Threat Dragon project, the easiest way to get in contact with the community is
@@ -212,7 +213,7 @@ You can follow the Threat Dragon on [Bluesky][bluesky].
 
 ### Vulnerability disclosure
 
-If you find a vulnerability introduced by this fork (the AI Threat Report feature, the local
+If you find a vulnerability introduced by this clone (the AI Threat Report feature, the local
 Caddy/TLS tooling, or anything else changed here), please open a
 [security advisory on this repository][fork-advisory] rather than the upstream project's.
 
@@ -221,7 +222,7 @@ so it can be fixed as a priority — see the [upstream security policy](security
 
 ### Project leaders
 
-**This fork** is maintained by [Paschoal Diniz][fork-owner].
+**This clone** is maintained by [Paschoal Diniz][fork-owner].
 
 **Upstream OWASP Threat Dragon** is led by:
 
