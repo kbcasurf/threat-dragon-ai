@@ -1,5 +1,5 @@
 # NPM: Base image with latest npm (in native host's platform)
-FROM --platform=$BUILDPLATFORM docker.io/library/node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43 AS build-npm-base
+FROM --platform=$BUILDPLATFORM docker.io/library/node:24.20.0-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf AS build-npm-base
 WORKDIR /build
 
 # Copy over NPM config and enforce usage across all tool calls
@@ -91,7 +91,7 @@ COPY docs/ .
 RUN bundle exec jekyll build -b ./docs/
 
 
-FROM docker.io/library/node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43 AS final
+FROM docker.io/library/node:24.20.0-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf AS final
 
 # The base image's baked-in libssl3/libcrypto3 (3.5.7-r0) carries several
 # openssl CVEs (e.g. CVE-2026-14456) fixed upstream at 3.5.8-r0. Alpine's
